@@ -1,0 +1,300 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Save, Loader2 } from "lucide-react";
+import { supabaseClient } from "@/lib/supabase/client";
+import { useToast } from "@/hooks/useToast";
+import { keluargaSchema, type KeluargaFormValues } from "@/types/keluarga";
+
+interface FormKeluargaProps {
+  mode: "tambah" | "edit";
+  idKeluarga?: string;
+}
+
+export default function FormKeluarga({ mode, idKeluarga }: FormKeluargaProps) {
+  const router = useRouter();
+  const { showToast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(mode === "edit");
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    setError,
+    formState: { errors },
+  } = useForm<KeluargaFormValues>({
+    resolver: zodResolver(keluargaSchema),
+    defaultValues: {
+      nomor_kk: "",
+      nama_kepala: "",
+      nik_kepala: "",
+      alamat: "",
+      rt: "",
+      rw: "",
+    },
+  });
+
+  // Ambil data awal jika sedang dalam mode EDIT
+  useEffect(() => {
+    if (mode === "edit" && idKeluarga) {
+      const fetchKeluarga = async () => {
+        const { data, error } = await supabaseClient
+          .from("keluarga")
+          .select("*")
+          .eq("id", idKeluarga)
+          .single();
+
+        if (error) {
+          showToast("error", "Gagal memuat data", error.message);
+          router.push("/dashboard/keluarga");
+          return;
+        }
+
+        if (data) {
+          setValue("nomor_kk", data.no_kk);
+          setValue("nama_kepala", data.nama_kepala);
+          setValue("rt", data.rt);
+          setValue("rw", data.rw);
+          setValue("alamat", data.alamat);
+          setValue("nik_kepala", data.nik_kepala || ""); 
+        }
+        setIsLoadingData(false);
+      };
+
+      fetchKeluarga();
+    }
+  }, [mode, idKeluarga, setValue, router, showToast]);
+
+  // Fungsi Submit + Validasi Ganda ke Supabase
+  const onSubmit = async (values: KeluargaFormValues) => {
+    setIsSubmitting(true);
+
+    try {
+      // --------------------------------------------------------------
+      // VALIDASI 1: Cek keunikan Nomor KK ke tabel 'keluarga'
+      // --------------------------------------------------------------
+      const checkKkQuery = supabaseClient
+        .from("keluarga")
+        .select("no_kk")
+        .eq("no_kk", values.nomor_kk);
+      
+      if (mode === "edit" && idKeluarga) {
+        checkKkQuery.neq("id", idKeluarga);
+      }
+
+      const { data: existingKk, error: errorCheckKk } = await checkKkQuery;
+      if (errorCheckKk) throw errorCheckKk;
+
+      if (existingKk && existingKk.length > 0) {
+        setError("nomor_kk", { message: "Nomor KK sudah terdaftar di sistem" });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // --------------------------------------------------------------
+      // VALIDASI 2: Cek keunikan NIK Kepala Keluarga ke tabel 'anggota'
+      // --------------------------------------------------------------
+      const checkNikQuery = supabaseClient
+        .from("anggota")
+        .select("nik, keluarga_id")
+        .eq("nik", values.nik_kepala);
+
+      const { data: existingNik, error: errorCheckNik } = await checkNikQuery;
+      if (errorCheckNik) throw errorCheckNik;
+
+      if (existingNik && existingNik.length > 0) {
+        // Jika mode edit, toleransi jika NIK tersebut terdaftar di dalam KK yang sama
+        const belongsToSameFamily = mode === "edit" && existingNik[0].keluarga_id === idKeluarga;
+        
+        if (!belongsToSameFamily) {
+          setError("nik_kepala", { message: "NIK sudah terdaftar pada warga/anggota keluarga lain" });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // susun data payload
+      const dbPayload = {
+        no_kk: values.nomor_kk,
+        nama_kepala: values.nama_kepala,
+        rt: values.rt,
+        rw: values.rw,
+        alamat: values.alamat,
+        nik_kepala: values.nik_kepala, 
+      };
+
+      // --------------------------------------------------------------
+      // EKSEKUSI DATA (INSERT / UPDATE)
+      // --------------------------------------------------------------
+      if (mode === "tambah") {
+        const { error } = await supabaseClient
+          .from("keluarga")
+          .insert([dbPayload]);
+          
+        if (error) throw error;
+        showToast("success", "Berhasil", "Data keluarga baru berhasil ditambahkan.");
+      } else {
+        const { error } = await supabaseClient
+          .from("keluarga")
+          .update(dbPayload)
+          .eq("id", idKeluarga);
+          
+        if (error) throw error;
+        showToast("success", "Berhasil", "Perubahan data keluarga berhasil diperbarui.");
+      }
+
+      router.push("/dashboard/keluarga");
+      router.refresh();
+    } catch (error: any) {
+      showToast("error", "Gagal Menyimpan", error.message || "Terjadi kesalahan sistem.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoadingData) {
+    return (
+      <div className="flex h-40 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        {/* Nomor KK */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-slate-700">
+            Nomor KK <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            maxLength={16}
+            {...register("nomor_kk")}
+            className={`mt-1 block w-full rounded-lg border p-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 bg-white ${
+              errors.nomor_kk ? "border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-red-500" : "border-slate-300"
+            }`}
+          />
+          {errors.nomor_kk && <span className="text-xs text-red-500 mt-1 font-medium">{errors.nomor_kk.message}</span>}
+        </div>
+
+        {/* Nama Kepala Keluarga */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-slate-700">
+            Nama Kepala Keluarga <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            {...register("nama_kepala")}
+            className={`mt-1 block w-full rounded-lg border p-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 bg-white ${
+              errors.nama_kepala ? "border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-red-500" : "border-slate-300"
+            }`}
+          />
+          {errors.nama_kepala && <span className="text-xs text-red-500 mt-1 font-medium">{errors.nama_kepala.message}</span>}
+        </div>
+
+        {/* NIK Kepala Keluarga */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-slate-700">
+            NIK Kepala Keluarga <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            maxLength={16}
+            {...register("nik_kepala")}
+            className={`mt-1 block w-full rounded-lg border p-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 bg-white ${
+              errors.nik_kepala ? "border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-red-500" : "border-slate-300"
+            }`}
+          />
+          {errors.nik_kepala && <span className="text-xs text-red-500 mt-1 font-medium">{errors.nik_kepala.message}</span>}
+        </div>
+
+        {/* RT / RW Group */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-slate-700">
+              RT <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="00"
+              maxLength={3}
+              {...register("rt")}
+              className={`mt-1 block w-full rounded-lg border p-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 bg-white ${
+                errors.rt ? "border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-red-500" : "border-slate-300"
+              }`}
+            />
+            {errors.rt && <span className="text-xs text-red-500 mt-1 font-medium">{errors.rt.message}</span>}
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-slate-700">
+              RW <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="00"
+              maxLength={3}
+              {...register("rw")}
+              className={`mt-1 block w-full rounded-lg border p-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 bg-white ${
+                errors.rw ? "border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-red-500" : "border-slate-300"
+              }`}
+            />
+            {errors.rw && <span className="text-xs text-red-500 mt-1 font-medium">{errors.rw.message}</span>}
+          </div>
+        </div>
+
+        {/* Alamat Lengkap */}
+        <div className="flex flex-col gap-1 md:col-span-2">
+          <label className="text-sm font-semibold text-slate-700">
+            Alamat Lengkap <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            rows={3}
+            {...register("alamat")}
+            className={`mt-1 block w-full rounded-lg border p-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 bg-white ${
+              errors.alamat ? "border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-red-500" : "border-slate-300"
+            }`}
+          />
+          {errors.alamat && <span className="text-xs text-red-500 mt-1 font-medium">{errors.alamat.message}</span>}
+        </div>
+      </div>
+
+      {/* ACTION BUTTONS BAR */}
+      <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-6">
+        <button
+          type="button"
+          disabled={isSubmitting}
+          onClick={() => router.push("/dashboard/keluarga")}
+          className="px-4 py-2.5 border border-slate-300 hover:border-slate-400 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed bg-white"
+        >
+          Batal
+        </button>
+        
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex items-center gap-2 px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-[#15803d] hover:bg-[#166534] focus:outline-none transition disabled:opacity-75 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Menyimpan...</span>
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              <span>Simpan Data</span>
+            </>
+          )}
+        </button>
+      </div>
+    </form>
+  );
+}

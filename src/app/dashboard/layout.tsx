@@ -3,32 +3,23 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import DashboardLayoutClient from "@/components/dashboard/DashboardLayoutClient";
 
-interface DashboardLayoutProps {
-  children: React.ReactNode;
-}
-
-export default async function DashboardLayout({ children }: DashboardLayoutProps) {
-  // 1. Inisialisasi Supabase Server Client untuk mengecek sesi di Cookie
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  // 2. Ambil data user yang sedang login aktif saat ini
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) redirect("/login");
 
-  // Proteksi lapis kedua: Jika cookie kosong/tidak login, tendang balik ke /login
-  if (userError || !user) {
-    redirect("/login");
-  }
+  // Ambil profil
+  const { data: profile } = await supabase.from("profiles").select("nama_lengkap, role").eq("id", user.id).single();
 
-  // 3. Ambil detail nama_lengkap & role dari tabel profiles di database warga
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("nama_lengkap, role")
-    .eq("id", user.id)
-    .single();
+  // Ambil notifikasi (Hanya yang belum dibaca)
+  const { data: initialNotifs } = await supabase.from("notifikasi").select("*").eq("user_id", user.id).eq("is_read", false).order("created_at", { ascending: false });
 
-  // Alirkan data profil server ke komponen client visual dashboard
   return (
-    <DashboardLayoutClient userProfile={profile}>
+    <DashboardLayoutClient userProfile={profile} initialNotifs={initialNotifs || []}>
       {children}
     </DashboardLayoutClient>
   );

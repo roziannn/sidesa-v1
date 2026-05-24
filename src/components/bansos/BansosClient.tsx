@@ -1,13 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  HandHeart, Search, Plus, CheckCircle, RotateCcw, Trash2, Pencil, 
-  Users, Layers, MapPin, ShieldCheck, Clock, CheckSquare, Square, Loader2 
-} from "lucide-react";
+import { Search, Plus, CheckCircle, RotateCcw, Trash2, Pencil, Users, Layers, MapPin, ShieldCheck, Clock, CheckSquare, Square, Loader2 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import ConfirmModal from "@/components/ConfirmModal";
+import FormPenerimaBansos from "@/components/bansos/FormPenerimaBansos";
+import FormProgram from "@/components/bansos/FormPage"; // 📁 Mengintegrasikan Form Master Program Baru
 import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 
@@ -17,13 +17,16 @@ interface PenerimaBansos {
   penerima_id: string;
   jumlah_bantuan: number;
   periode: string;
-  status: "Menunggu" | "Tersalurkan";
+  status: "pending" | "tersalurkan";
   catatan: string | null;
   created_at: string;
   profiles?: {
     nama: string;
     rt: string;
     rw: string;
+  } | null;
+  anggota?: {
+    nama: string;
   } | null;
 }
 
@@ -33,29 +36,49 @@ interface ProgramAgregasi {
   periode: string;
 }
 
-interface BansosClientProps {
-  initialData: PenerimaBansos[];
+interface WargaDropdown {
+  id: string;
+  nama: string;
+  rt: string;
+  rw: string;
 }
 
-export default function BansosClient({ initialData }: BansosClientProps) {
+interface BansosClientProps {
+  initialData: PenerimaBansos[];
+  daftarWarga: WargaDropdown[];
+}
+
+export default function BansosClient({ initialData, daftarWarga }: BansosClientProps) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
 
-  // State Filter & Pencarian
+  // State Filter & Pencarian Tabel
   const [filterProgram, setFilterProgram] = useState("Semua Program");
   const [filterStatus, setFilterStatus] = useState("Semua");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // State Kunci Fitur Bulk (Massal)
+  // State Fitur Bulk (Massal)
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
-  const [bulkActionType, setBulkActionType] = useState<"salurkan" | "hapus" | null>(null);
 
   // State Modal Tunggal Hapus Penerima
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedPenerima, setSelectedPenerima] = useState<PenerimaBansos | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // State Modal Form Alokasi Penerima Bansos (Warga)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedDefaultProgram, setSelectedDefaultProgram] = useState<string | undefined>(undefined);
+
+  // 🚀 State Baru: Modal Form Master Program Bansos (Tambah/Edit)
+  const [isProgramModalOpen, setIsProgramModalOpen] = useState(false);
+  const [selectedProgramData, setSelectedProgramData] = useState<{
+    nama_program: string;
+    deskripsi?: string | null;
+    jumlah_bantuan_default?: number | null;
+    is_aktif: boolean;
+  } | null>(null);
 
   // ----------------------------------------------------------------
   // LOGIKA AGREGASI STATS BAR
@@ -70,7 +93,7 @@ export default function BansosClient({ initialData }: BansosClientProps) {
     }
     programMap[item.nama_program].totalPenerima += 1;
 
-    if (item.status === "Tersalurkan") {
+    if (item.status === "tersalurkan") {
       totalTersalurkan += 1;
     } else {
       totalMenunggu += 1;
@@ -87,24 +110,13 @@ export default function BansosClient({ initialData }: BansosClientProps) {
   const filteredData = initialData.filter((item) => {
     const matchProgram = filterProgram === "Semua Program" || item.nama_program === filterProgram;
     const matchStatus = filterStatus === "Semua" || item.status === filterStatus;
-    const namaWarga = (item.profiles?.nama || "").toLowerCase();
+    const namaWarga = (item.profiles?.nama || item.anggota?.nama || "").toLowerCase();
     return matchProgram && matchStatus && namaWarga.includes(searchQuery.toLowerCase());
   });
 
   // ----------------------------------------------------------------
   // HANDLER CHECKBOX MANAGEMENT (BULK SELECT)
   // ----------------------------------------------------------------
-  const handleSelectAllToggle = () => {
-    if (selectedIds.length === filteredData.length && filteredData.length > 0) {
-      // Jika semua sudah dicentang, kosongkan seleksi
-      setSelectedIds([]);
-    } else {
-      // Centang seluruh baris data yang sedang tampil di filter saat ini
-      const allIds = filteredData.map((item) => item.id);
-      setSelectedIds(allIds);
-    }
-  };
-
   const handleRowSelectToggle = (id: string) => {
     if (selectedIds.includes(id)) {
       setSelectedIds(selectedIds.filter((item) => item !== id));
@@ -114,7 +126,7 @@ export default function BansosClient({ initialData }: BansosClientProps) {
   };
 
   // ----------------------------------------------------------------
-  // HANDLER BULK EXECUTION ACTION (SUPABASE OPERATION)
+  // HANDLER BULK EXECUTION ACTION
   // ----------------------------------------------------------------
   const handleBulkUpdateStatus = async () => {
     const totalSelected = selectedIds.length;
@@ -123,17 +135,14 @@ export default function BansosClient({ initialData }: BansosClientProps) {
 
     setIsBulkActionLoading(true);
     try {
-      // Menggunakan query filter .in('id', selectedIds) massal
-      const { error } = await supabaseClient
-        .from("bansos")
-        .update({ status: "Tersalurkan" })
-        .in("id", selectedIds);
-
+      const { error } = await supabaseClient.from("bansos").update({ status: "tersalurkan" }).in("id", selectedIds);
       if (error) throw error;
 
       showToast("success", "Penyaluran Massal Berhasil", `${totalSelected} bansos warga berhasil ditandai Tersalurkan.`);
-      setSelectedIds([]); // Otomatis hilangkan action bar setelah sukses
-      startTransition(() => { router.refresh(); });
+      setSelectedIds([]);
+      startTransition(() => {
+        router.refresh();
+      });
     } catch (err: any) {
       showToast("error", "Gagal Memproses Bulk", err.message || "Terjadi kendala sistem.");
     } finally {
@@ -148,16 +157,14 @@ export default function BansosClient({ initialData }: BansosClientProps) {
 
     setIsBulkActionLoading(true);
     try {
-      const { error } = await supabaseClient
-        .from("bansos")
-        .delete()
-        .in("id", selectedIds);
-
+      const { error } = await supabaseClient.from("bansos").delete().in("id", selectedIds);
       if (error) throw error;
 
       showToast("success", "Penghapusan Massal Sukses", `${totalSelected} penerima dikeluarkan dari program.`);
       setSelectedIds([]);
-      startTransition(() => { router.refresh(); });
+      startTransition(() => {
+        router.refresh();
+      });
     } catch (err: any) {
       showToast("error", "Gagal Menghapus Massal", err.message);
     } finally {
@@ -168,13 +175,17 @@ export default function BansosClient({ initialData }: BansosClientProps) {
   // ----------------------------------------------------------------
   // HANDLER TUNGGAL BARIS DATA
   // ----------------------------------------------------------------
-  const handleUpdateStatusTunggal = async (id: string, namaWarga: string, statusBaru: "Tersalurkan" | "Menunggu") => {
+  const handleUpdateStatusTunggal = async (id: string, namaWarga: string, statusBaru: "tersalurkan" | "pending") => {
     try {
       const { error } = await supabaseClient.from("bansos").update({ status: statusBaru }).eq("id", id);
       if (error) throw error;
-      showToast("success", statusBaru === "Tersalurkan" ? "Bansos Tersalurkan" : "Penyaluran Dibatalkan", `Status ${namaWarga} sukses diperbarui.`);
-      startTransition(() => { router.refresh(); });
-    } catch (err: any) { showToast("error", "Gagal", err.message); }
+      showToast("success", statusBaru === "tersalurkan" ? "Bansos Tersalurkan" : "Penyaluran Dibatalkan", `Status ${namaWarga} sukses diperbarui.`);
+      startTransition(() => {
+        router.refresh();
+      });
+    } catch (err: any) {
+      showToast("error", "Gagal", err.message);
+    }
   };
 
   const handleOpenDelete = (penerima: PenerimaBansos) => {
@@ -191,26 +202,35 @@ export default function BansosClient({ initialData }: BansosClientProps) {
       showToast("success", "Penerima Dihapus", "Warga berhasil dikeluarkan dari program.");
       setIsDeleteModalOpen(false);
       setSelectedPenerima(null);
-      startTransition(() => { router.refresh(); });
-    } catch (err: any) { showToast("error", "Gagal", err.message); } finally { setIsDeleting(false); }
+      startTransition(() => {
+        router.refresh();
+      });
+    } catch (err: any) {
+      showToast("error", "Gagal", err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Trigger penyegaran data global dari form sukses (Penerima maupun Master Program)
+  const handleRefreshServerData = () => {
+    startTransition(() => {
+      router.refresh();
+    });
   };
 
   const columns: Column<PenerimaBansos>[] = [
     {
       key: "checkbox_bulk",
-      label: "", // Aman! Tetap string murni agar DataTable tidak mengamuk lagi
+      label: "",
       render: (_, row) => {
         const isSelected = selectedIds.includes(row.id);
         return (
-          <button 
-            type="button" 
-            onClick={() => handleRowSelectToggle(row.id)} 
-            className="text-slate-400 hover:text-slate-700 transition flex items-center justify-center mx-auto cursor-pointer"
-          >
+          <button type="button" onClick={() => handleRowSelectToggle(row.id)} className="text-slate-400 hover:text-slate-700 transition flex items-center justify-center mx-auto cursor-pointer">
             {isSelected ? <CheckSquare className="w-4.5 h-4.5 text-emerald-600" /> : <Square className="w-4.5 h-4.5" />}
           </button>
         );
-      }
+      },
     },
     {
       key: "id",
@@ -223,7 +243,7 @@ export default function BansosClient({ initialData }: BansosClientProps) {
     {
       key: "nama_warga",
       label: "Nama Penerima (Warga)",
-      render: (_, row) => <span className="font-semibold text-slate-800 uppercase">{row.profiles?.nama || "Nama Tidak Terdata"}</span>,
+      render: (_, row) => <span className="font-semibold text-slate-800 uppercase">{row.profiles?.nama || row.anggota?.nama || "Nama Tidak Terdata"}</span>,
     },
     {
       key: "wilayah",
@@ -246,26 +266,20 @@ export default function BansosClient({ initialData }: BansosClientProps) {
       key: "status",
       label: "Status",
       render: (val) => {
-        const isSelesai = val === "Tersalurkan";
-        return (
-          <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${
-            isSelesai ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
-          }`}>
-            {String(val)}
-          </span>
-        );
+        const isSelesai = val === "tersalurkan";
+        return <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${isSelesai ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>{String(val)}</span>;
       },
     },
     {
       key: "aksi_kustom",
       label: "Aksi Penyaluran",
       render: (_, row) => {
-        const namaWarga = row.profiles?.nama || "Warga";
+        const namaWarga = row.profiles?.nama || row.anggota?.nama || "Warga";
         return (
           <div className="flex items-center gap-1.5">
-            {row.status === "Menunggu" ? (
+            {row.status === "pending" ? (
               <button
-                onClick={() => handleUpdateStatusTunggal(row.id, namaWarga, "Tersalurkan")}
+                onClick={() => handleUpdateStatusTunggal(row.id, namaWarga, "tersalurkan")}
                 className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-2 py-1 rounded-md shadow-sm transition cursor-pointer"
               >
                 <CheckCircle className="w-3 h-3" />
@@ -273,7 +287,7 @@ export default function BansosClient({ initialData }: BansosClientProps) {
               </button>
             ) : (
               <button
-                onClick={() => handleUpdateStatusTunggal(row.id, namaWarga, "Menunggu")}
+                onClick={() => handleUpdateStatusTunggal(row.id, namaWarga, "pending")}
                 className="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-semibold px-2 py-1 rounded-md border border-slate-300 transition cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -285,8 +299,10 @@ export default function BansosClient({ initialData }: BansosClientProps) {
       },
     },
   ];
+
   return (
     <div className="space-y-6">
+      {/* CARD AGREGASI ATAS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Program Aktif", value: totalProgramAktif, icon: Layers, color: "text-emerald-600", bg: "bg-emerald-50" },
@@ -309,34 +325,75 @@ export default function BansosClient({ initialData }: BansosClientProps) {
       {/* CATALOG CARD SECTION */}
       <div className="space-y-3 pt-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2"><Layers className="w-4 h-4 text-emerald-700" /><h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Katalog Alokasi Program</h3></div>
-          <button onClick={() => showToast("warning", "Fitur Pemeliharaan", "Konfigurasi program master bansos.")} className="inline-flex items-center gap-1.5 bg-[#14532d] hover:bg-[#166534] text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm cursor-pointer transition"><Plus className="w-3.5 h-3.5" /> Tambah Program</button>
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-emerald-700" />
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Katalog Alokasi Program</h3>
+          </div>
+          {/* ACTION BUTTON TAMBAH MASTER PROGRAM */}
+          <button
+            onClick={() => {
+              setSelectedProgramData(null); // Mode Kosong (Tambah)
+              setIsProgramModalOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 bg-[#14532d] hover:bg-[#166534] text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm cursor-pointer transition"
+          >
+            <Plus className="w-3.5 h-3.5" /> Tambah Program
+          </button>
         </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {daftarProgram.map((prog) => (
             <div key={prog.nama} className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition">
               <div className="space-y-2">
-                <div className="flex items-start justify-between gap-2"><h4 className="font-extrabold text-slate-900 text-sm tracking-tight leading-snug line-clamp-2 uppercase">{prog.nama}</h4><span className="px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider bg-emerald-50 text-emerald-700">Aktif</span></div>
-                <div className="flex items-center gap-2 text-xs text-slate-500 pt-1"><Users className="w-4 h-4 text-slate-400" /><span>Total Alokasi: <strong className="text-slate-800">{prog.totalPenerima} Warga</strong></span></div>
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="font-extrabold text-slate-900 text-sm tracking-tight leading-snug line-clamp-2 uppercase">{prog.nama}</h4>
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider bg-emerald-50 text-emerald-700">Aktif</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500 pt-1">
+                  <Users className="w-4 h-4 text-slate-400" />
+                  <span>
+                    Total Alokasi: <strong className="text-slate-800">{prog.totalPenerima} Warga</strong>
+                  </span>
+                </div>
                 <p className="text-[11px] text-slate-400">Periode Berjalan: {prog.periode}</p>
               </div>
               <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-4">
-                <button onClick={() => { setFilterProgram(prog.nama); document.getElementById("tabel-penerima-section")?.scrollIntoView({ behavior: "smooth" }); }} className="text-xs font-bold text-emerald-700 hover:text-emerald-900 inline-flex items-center gap-1 cursor-pointer">Lihat Penerima →</button>
-                <button onClick={() => showToast("warning", "Akses Ditutup", "Memerlukan hak akses Admin Utama.")} className="p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-50 transition"><Pencil className="w-3.5 h-3.5" /></button>
+                <button
+                  onClick={() => {
+                    setFilterProgram(prog.nama);
+                    document.getElementById("tabel-penerima-section")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="text-xs font-bold text-emerald-700 hover:text-emerald-900 inline-flex items-center gap-1 cursor-pointer"
+                >
+                  Lihat Penerima →
+                </button>
+                {/* ACTION BUTTON EDIT MASTER PROGRAM */}
+                <button
+                  onClick={async () => {
+                    // Cari data pendukung default bantuan dari baris data yang ada atau default
+                    const matchedItem = initialData.find((d) => d.nama_program === prog.nama);
+                    setSelectedProgramData({
+                      nama_program: prog.nama,
+                      deskripsi: matchedItem?.catatan || "",
+                      jumlah_bantuan_default: matchedItem?.jumlah_bantuan || null,
+                      is_aktif: true,
+                    });
+                    setIsProgramModalOpen(true);
+                  }}
+                  className="p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-50 transition cursor-pointer"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ================================================================= */}
-      {/* TABEL AREA SECTION & DYNAMIC BULK ACTION FLOAT BAR                */}
-      {/* ================================================================= */}
+      {/* TABEL AREA SECTION & DYNAMIC BULK ACTION FLOAT BAR */}
       <div id="tabel-penerima-section" className="space-y-4 pt-2 border-t border-slate-200 relative">
-        
-        {/* 🚀 FLOAT ACTION BAR UTK UPDATE MASSAL (MUNCUL OTOMATIS JIKA ADA CENTANG) */}
         {selectedIds.length > 0 && (
-          <div className="bg-slate-900 text-white p-3.5 rounded-xl flex items-center justify-between shadow-xl animate-scale-up border border-slate-800 z-20">
+          <div className="bg-slate-900 text-white p-3.5 rounded-xl flex items-center justify-between shadow-xl border border-slate-800 z-20">
             <div className="flex items-center gap-3">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
               <p className="text-xs md:text-sm font-medium">
@@ -361,11 +418,7 @@ export default function BansosClient({ initialData }: BansosClientProps) {
                 Hapus Terpilih
               </button>
               <div className="w-px h-5 bg-slate-700 mx-1 hidden sm:block" />
-              <button
-                onClick={() => setSelectedIds([])}
-                disabled={isBulkActionLoading}
-                className="text-xs font-semibold text-slate-400 hover:text-white px-2 py-1 transition cursor-pointer"
-              >
+              <button onClick={() => setSelectedIds([])} disabled={isBulkActionLoading} className="text-xs font-semibold text-slate-400 hover:text-white px-2 py-1 transition cursor-pointer">
                 Batal
               </button>
             </div>
@@ -377,30 +430,94 @@ export default function BansosClient({ initialData }: BansosClientProps) {
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <div className="flex flex-col gap-1">
               <span className="font-semibold text-slate-400 text-[10px] uppercase">Program Kerja</span>
-              <select value={filterProgram} onChange={(e) => { setFilterProgram(e.target.value); setSelectedIds([]); }} className="bg-white border border-slate-300 rounded-lg py-1.5 pl-2 pr-8 font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 min-w-[160px]"><option value="Semua Program">📁 Semua Program</option>{daftarProgram.map(p => (<option key={p.nama} value={p.nama}>🔹 {p.nama}</option>))}</select>
+              <select
+                value={filterProgram}
+                onChange={(e) => {
+                  setFilterProgram(e.target.value);
+                  setSelectedIds([]);
+                }}
+                className="bg-white border border-slate-300 rounded-lg py-1.5 pl-2 pr-8 font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 min-w-[160px]"
+              >
+                <option value="Semua Program">📁 Semua Program</option>
+                {daftarProgram.map((p) => (
+                  <option key={p.nama} value={p.nama}>
+                    🔹 {p.nama}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="flex flex-col gap-1">
               <span className="font-semibold text-slate-400 text-[10px] uppercase">Status Cair</span>
-              <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setSelectedIds([]); }} className="bg-white border border-slate-300 rounded-lg py-1.5 px-2 font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"><option value="Semua">📦 Semua Status</option><option value="Menunggu">⏳ Menunggu</option><option value="Tersalurkan">✅ Tersalurkan</option></select>
+              <select
+                value={filterStatus}
+                onChange={(e) => {
+                  setFilterStatus(e.target.value);
+                  setSelectedIds([]);
+                }}
+                className="bg-white border border-slate-300 rounded-lg py-1.5 px-2 font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              >
+                <option value="Semua">📦 Semua Status</option>
+                <option value="Menunggu">⏳ Menunggu</option>
+                <option value="Tersalurkan">✅ Tersalurkan</option>
+              </select>
             </div>
             <div className="flex flex-col gap-1 w-full sm:w-auto sm:min-w-[240px]">
               <span className="font-semibold text-slate-400 text-[10px] uppercase">Cari Nama Penerima</span>
-              <div className="relative"><Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" /><input type="text" placeholder="Ketik nama warga..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setSelectedIds([]); }} className="w-full bg-white border border-slate-300 rounded-lg py-1.5 pl-8 pr-3 font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs" /></div>
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Ketik nama warga..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSelectedIds([]);
+                  }}
+                  className="w-full bg-white border border-slate-300 rounded-lg py-1.5 pl-8 pr-3 font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
+                />
+              </div>
             </div>
           </div>
-          <button onClick={() => showToast("warning", "Alokasi Warga Baru", "Gunakan tabel profil warga.")} className="md:mt-4 inline-flex items-center justify-center gap-1.5 bg-[#15803d] hover:bg-[#166534] text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition h-9 self-end md:self-auto cursor-pointer"><Plus className="w-4 h-4" /> Tambah Penerima</button>
+          <button
+            onClick={() => {
+              setSelectedDefaultProgram(filterProgram !== "Semua Program" ? filterProgram : undefined);
+              setIsAddModalOpen(true);
+            }}
+            className="md:mt-4 inline-flex items-center justify-center gap-1.5 bg-[#15803d] hover:bg-[#166534] text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition h-9 self-end md:self-auto cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> Tambah Penerima
+          </button>
         </div>
 
         {/* TABEL DATA DENGAN CHECKBOX */}
-        <DataTable<PenerimaBansos>
-          columns={columns}
-          data={filteredData}
-          isLoading={isPending}
-          onDelete={handleOpenDelete}
-        />
+        <DataTable<PenerimaBansos> columns={columns} data={filteredData} isLoading={isPending} onDelete={handleOpenDelete} />
       </div>
 
-      <ConfirmModal isOpen={isDeleteModalOpen} title="Batalkan Hak Penerima Bansos?" message={`Apakah Anda yakin ingin mencabut hak bantuan warga ${selectedPenerima?.profiles?.nama || "ini"} secara permanen dari daftar program ${selectedPenerima?.nama_program}?`} confirmLabel="Ya, Cabut Hak" confirmVariant="danger" isLoading={isDeleting} onConfirm={handleExecuteDelete} onCancel={() => setIsDeleteModalOpen(false)} />
+      {/* CONFIRM MODAL SINGLE DELETE */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        title="Batalkan Hak Penerima Bansos?"
+        message={`Apakah Anda yakin ingin mencabut hak bantuan warga ${selectedPenerima?.profiles?.nama || selectedPenerima?.anggota?.nama || "ini"} secara permanen dari daftar program ${selectedPenerima?.nama_program}?`}
+        confirmLabel="Ya, Cabut Hak"
+        confirmVariant="danger"
+        isLoading={isDeleting}
+        onConfirm={handleExecuteDelete}
+        onCancel={() => setIsDeleteModalOpen(false)}
+      />
+
+      {/* FORM MODAL ALOKASI PENERIMA BANSOS BARU (WARGA) */}
+      <FormPenerimaBansos isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={handleRefreshServerData} defaultProgram={selectedDefaultProgram} />
+
+      {/* 🚀 FORM MODAL MANAJEMEN MASTER PROGRAM BANSOS (TAMBAH / EDIT KASKADE) */}
+      <FormProgram
+        isOpen={isProgramModalOpen}
+        onClose={() => {
+          setIsProgramModalOpen(false);
+          setSelectedProgramData(null);
+        }}
+        onSuccess={handleRefreshServerData}
+        initialData={selectedProgramData}
+      />
     </div>
   );
 }

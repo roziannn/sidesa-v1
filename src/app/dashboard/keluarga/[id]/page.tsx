@@ -35,7 +35,8 @@ async function KeluargaDetailFetch({ id }: { id: string }) {
   // Query mengambil data keluarga beserta relasi seluruh anggota di dalamnya
   const { data: keluarga, error } = await supabase
     .from("keluarga")
-    .select(`
+    .select(
+      `
       id,
       no_kk,
       nama_kepala,
@@ -52,7 +53,8 @@ async function KeluargaDetailFetch({ id }: { id: string }) {
         tgl_lahir,
         jenis_kelamin
       )
-    `)
+    `,
+    )
     .eq("id", id)
     .maybeSingle(); // Aman dari error PGRST116 jika baris data tidak ditemukan
 
@@ -68,5 +70,6 @@ async function KeluargaDetailFetch({ id }: { id: string }) {
   }
 
   // Kirim data yang valid ke komponen visual interaktif klien
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return <KeluargaDetailClient keluarga={keluarga as any} />;
 }

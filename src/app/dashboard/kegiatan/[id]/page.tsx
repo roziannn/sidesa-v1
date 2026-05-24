@@ -68,14 +68,25 @@ export default function DetailKegiatanPage() {
   }, [loadData, fetchWarga]);
 
   const handleTambahPeserta = async () => {
+    // Validasi: Pastikan sudah memilih warga
+    if (!newPeserta.profil_id) {
+      alert("Silakan pilih warga terlebih dahulu!");
+      return;
+    }
+
     const { error } = await supabaseClient.from("peserta_kegiatan").insert({
       kegiatan_id: id,
       profil_id: newPeserta.profil_id,
-      catatan: newPeserta.catatan,
+      catatan: newPeserta.catatan || null, // Pastikan catatan null jika kosong
     });
-    if (!error) {
+
+    if (error) {
+      console.error("Error saat menambah peserta:", error);
+      alert("Gagal menambahkan peserta: " + error.message);
+    } else {
       setShowAddModal(false);
-      loadData();
+      setNewPeserta({ profil_id: "", catatan: "" }); // Reset form
+      loadData(); // Refresh data
     }
   };
 

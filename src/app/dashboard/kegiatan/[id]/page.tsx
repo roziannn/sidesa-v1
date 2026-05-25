@@ -45,7 +45,7 @@ export default function DetailKegiatanPage() {
   const [showDeleteModal, setShowDeleteModal] = useState<Peserta | null>(null);
   const [alasanBatal, setAlasanBatal] = useState("");
   const [wargaList, setWargaList] = useState<Profile[]>([]);
-  const [newPeserta, setNewPeserta] = useState({ profil_id: "", catatan: "" });
+  const [newPeserta, setNewPeserta] = useState({ warga_id: "", catatan: "" });
 
   const loadData = useCallback(async () => {
     if (!id) return;
@@ -69,14 +69,14 @@ export default function DetailKegiatanPage() {
 
   const handleTambahPeserta = async () => {
     // Validasi: Pastikan sudah memilih warga
-    if (!newPeserta.profil_id) {
+    if (!newPeserta.warga_id) {
       alert("Silakan pilih warga terlebih dahulu!");
       return;
     }
 
     const { error } = await supabaseClient.from("peserta_kegiatan").insert({
       kegiatan_id: id,
-      profil_id: newPeserta.profil_id,
+      warga_id: newPeserta.warga_id,
       catatan: newPeserta.catatan || null, // Pastikan catatan null jika kosong
     });
 
@@ -85,7 +85,7 @@ export default function DetailKegiatanPage() {
       alert("Gagal menambahkan peserta: " + error.message);
     } else {
       setShowAddModal(false);
-      setNewPeserta({ profil_id: "", catatan: "" }); // Reset form
+      setNewPeserta({ warga_id: "", catatan: "" }); // Reset form
       loadData(); // Refresh data
     }
   };
@@ -164,10 +164,6 @@ export default function DetailKegiatanPage() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-bold text-lg">Peserta Terdaftar ({terdaftar} orang)</h2>
 
-          {/* Debug: Cek status kegiatan di console jika tombol tidak muncul */}
-          {console.log("Status kegiatan:", kegiatan.status)}
-
-          {/* Gunakan toLowerCase() agar case-insensitive (misal: "Aktif" vs "aktif") */}
           {kegiatan.status.toLowerCase() === "aktif" && (
             <button disabled={sisa <= 0} onClick={() => setShowAddModal(true)} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50 disabled:bg-slate-400">
               <UserPlus className="w-4 h-4" />
@@ -216,7 +212,7 @@ export default function DetailKegiatanPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-md">
             <h3 className="font-bold mb-4">Tambah Peserta</h3>
-            <select className="w-full border p-2 rounded mb-3" onChange={(e) => setNewPeserta({ ...newPeserta, profil_id: e.target.value })}>
+            <select className="w-full border p-2 rounded mb-3" onChange={(e) => setNewPeserta({ ...newPeserta, warga_id: e.target.value })}>
               <option value="">Pilih Warga...</option>
               {wargaList.map((w) => (
                 <option key={w.id} value={w.id}>

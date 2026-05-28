@@ -16,7 +16,7 @@ type Kegiatan = {
   waktu_selesai: string;
   lokasi: string;
   kuota: number;
-  status: "Aktif" | "Selesai" | "Dibatalkan";
+  status: "aktif" | "selesai" | "Dibatalkan";
   peserta_kegiatan?: { count: number }[];
 };
 
@@ -49,9 +49,7 @@ export default function KegiatanPage() {
   useEffect(() => {
     fetchData();
   }, []);
-  // =========================
-  // FILTER BULAN / TAHUN
-  // =========================
+
   // FILTER LOGIC
   const filteredData = useMemo(() => {
     return data.filter((k) => {
@@ -60,30 +58,21 @@ export default function KegiatanPage() {
     });
   }, [data, bulan, tahun]);
 
-  // =========================
-  // FORMAT TANGGAL
-  // =========================
-  const formatTanggal = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
+  // AGREGASI EVENT BERDASARKAN TANGGAL
+  const eventsByDay = useMemo(() => {
+    const map: Record<number, Kegiatan[]> = {};
+    filteredData.forEach((kegiatan) => {
+      const d = new Date(kegiatan.tanggal);
+      const tgl = d.getDate();
+      if (!map[tgl]) {
+        map[tgl] = [];
+      }
+      map[tgl].push(kegiatan);
     });
-  };
+    return map;
+  }, [filteredData]);
 
-  // =========================
-  // STATUS KUOTA COLOR
-  // =========================
-  const getKuotaColor = (terdaftar: number, kuota: number) => {
-    const ratio = terdaftar / kuota;
-    if (ratio >= 1) return "text-red-600";
-    if (ratio >= 0.8) return "text-orange-500";
-    return "text-emerald-600";
-  };
-
-  // COLUMNS CONFIG
+  // COLUMNS CONFIG FOR LIST
   const columns: Column<Kegiatan>[] = [
     { key: "judul", label: "Judul Kegiatan" },
     { key: "tanggal", label: "Tanggal", render: (val) => new Date(val as string).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }) },
@@ -105,7 +94,7 @@ export default function KegiatanPage() {
     {
       key: "status",
       label: "Status",
-      render: (_, row) => <span className={`px-2 py-1 rounded-full text-xs font-semibold ${row.status === "Aktif" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100"}`}>{row.status}</span>,
+      render: (_, row) => <span className={`px-2 py-1 rounded-full text-xs font-semibold ${row.status === "aktif" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100"}`}>{row.status}</span>,
     },
     {
       key: "aksi",
@@ -115,9 +104,7 @@ export default function KegiatanPage() {
           <button onClick={() => router.push(`/dashboard/kegiatan/${row.id}`)} className="text-emerald-600 font-semibold hover:underline">
             Detail
           </button>
-
           <span className="text-slate-300">|</span>
-
           <button onClick={() => router.push(`/dashboard/kegiatan/${row.id}/edit`)} className="text-amber-600 font-semibold hover:underline">
             Edit
           </button>
@@ -126,34 +113,50 @@ export default function KegiatanPage() {
     },
   ];
 
-  // =========================
   // KALENDER LOGIC
-  // =========================
   const daysInMonth = new Date(tahun, bulan, 0).getDate();
   const firstDay = new Date(tahun, bulan - 1, 1).getDay();
 
   const calendarDays = useMemo(() => {
     const days = [];
-
     for (let i = 0; i < firstDay; i++) {
       days.push(null);
     }
-
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(i);
     }
-
     return days;
   }, [bulan, tahun]);
+
+  // Menentukan jumlah baris minggu dalam bulan terpilih (biasanya 5 atau 6)
+  const totalWeeks = Math.ceil(calendarDays.length / 7);
 
   const namaBulan = new Date(tahun, bulan - 1).toLocaleString("id-ID", {
     month: "long",
   });
 
+  const handlePrevBulan = () => {
+    if (bulan === 1) {
+      setBulan(12);
+      setTahun((t) => t - 1);
+    } else {
+      setBulan((b) => b - 1);
+    }
+  };
+
+  const handleNextBulan = () => {
+    if (bulan === 12) {
+      setBulan(1);
+      setTahun((t) => t + 1);
+    } else {
+      setBulan((b) => b + 1);
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className={`space-y-4 ${mode === "kalender" ? "h-[calc(100vh-110px)] flex flex-col" : ""}`}>
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0">
         <h1 className="text-xl font-bold">Kegiatan Desa</h1>
 
         <div className="flex items-center gap-2">
@@ -167,17 +170,15 @@ export default function KegiatanPage() {
             Kalender
           </button>
 
-          <select value={bulan} onChange={(e) => setBulan(Number(e.target.value))} className="border rounded-lg px-2 py-1 text-sm">
+          <select value={bulan} onChange={(e) => setBulan(Number(e.target.value))} className="border rounded-lg px-2 py-1 text-sm bg-white">
             {Array.from({ length: 12 }).map((_, i) => (
               <option key={i} value={i + 1}>
-                {new Date(2025, i).toLocaleString("id-ID", {
-                  month: "long",
-                })}
+                {new Date(2025, i).toLocaleString("id-ID", { month: "long" })}
               </option>
             ))}
           </select>
 
-          <select value={tahun} onChange={(e) => setTahun(Number(e.target.value))} className="border rounded-lg px-2 py-1 text-sm">
+          <select value={tahun} onChange={(e) => setTahun(Number(e.target.value))} className="border rounded-lg px-2 py-1 text-sm bg-white">
             {[2024, 2025, 2026].map((t) => (
               <option key={t} value={t}>
                 {t}
@@ -185,18 +186,16 @@ export default function KegiatanPage() {
             ))}
           </select>
 
-          <button onClick={() => router.push("/dashboard/kegiatan/tambah")} className="bg-emerald-600 text-white px-3 py-1 rounded-lg text-sm font-semibold flex items-center gap-1">
+          <button onClick={() => router.push("/dashboard/kegiatan/tambah")} className="bg-emerald-600 text-white px-3 py-1 rounded-lg text-sm font-semibold flex items-center gap-1 shadow-sm">
             <Plus className="w-4 h-4" />
             Buat Kegiatan
           </button>
         </div>
       </div>
 
-      {/* =========================
-          MODE LIST
-      ========================= */}
+      {/* MODE LIST */}
       {mode === "list" && (
-        <>
+        <div className="overflow-auto">
           {filteredData.length === 0 ? (
             <div className="text-center py-16 border rounded-xl bg-slate-50">
               <CalendarIcon className="mx-auto w-10 h-10 text-slate-400" />
@@ -206,52 +205,76 @@ export default function KegiatanPage() {
           ) : (
             <DataTable columns={columns} data={filteredData} />
           )}
-        </>
+        </div>
       )}
 
-      {/* =========================
-          MODE KALENDER
-      ========================= */}
+      {/* MODE KALENDER (Full Page Viewport) */}
       {mode === "kalender" && (
-        <div className="space-y-4">
+        <div className="flex-1 flex flex-col bg-white border p-4 rounded-xl shadow-sm min-h-0 overflow-hidden">
           {/* NAVIGASI BULAN */}
-          <div className="flex items-center justify-between">
-            <button onClick={() => setBulan((b) => (b === 1 ? 12 : b - 1))}>
-              <ChevronLeft />
+          <div className="flex items-center justify-between border-b pb-2 flex-shrink-0">
+            <button onClick={handlePrevBulan} className="p-1 hover:bg-slate-100 rounded-md transition">
+              <ChevronLeft className="w-5 h-5" />
             </button>
-
-            <h2 className="font-bold text-lg capitalize">
+            <h2 className="font-bold text-lg capitalize text-slate-800">
               {namaBulan} {tahun}
             </h2>
-
-            <button onClick={() => setBulan((b) => (b === 12 ? 1 : b + 1))}>
-              <ChevronRight />
+            <button onClick={handleNextBulan} className="p-1 hover:bg-slate-100 rounded-md transition">
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
 
-          {/* GRID */}
-          <div className="grid grid-cols-7 gap-2 text-center text-sm font-semibold">
-            {["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].map((d) => (
-              <div key={d}>{d}</div>
-            ))}
-
-            {calendarDays.map((day, idx) => {
-              const today = new Date().getDate();
-              const isToday = day === today && bulan === now.getMonth() + 1 && tahun === now.getFullYear();
-
-              return (
-                <div key={idx} className={`h-20 border rounded-lg p-1 relative ${!day ? "bg-slate-50" : ""}`}>
-                  {day && (
-                    <>
-                      <div className={`w-6 h-6 flex items-center justify-center rounded-full mx-auto ${isToday ? "bg-blue-500 text-white" : ""}`}>{day}</div>
-
-                      {/* DOT EVENT */}
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full mx-auto mt-1"></div>
-                    </>
-                  )}
+          {/* WRAPPER GRID HARI & TANGGAL */}
+          <div className="flex-1 flex flex-col min-h-0 mt-3">
+            {/* NAMA HARI */}
+            <div className="grid grid-cols-7 gap-2 flex-shrink-0 mb-1">
+              {["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"].map((d, i) => (
+                <div key={d} className={`text-center text-xs font-bold uppercase tracking-wider ${i === 0 ? "text-red-500" : "text-slate-500"}`}>
+                  {d}
                 </div>
-              );
-            })}
+              ))}
+            </div>
+
+            {/* BARIS TANGGAL */}
+            {/* Menggunakan grid-rows dinamis berdasarkan jumlah minggu agar sel selalu terbagi rata */}
+            <div className="grid grid-cols-7 gap-2 flex-1 min-h-0" style={{ gridTemplateRows: `repeat(${totalWeeks}, minmax(0, 1fr))` }}>
+              {calendarDays.map((day, idx) => {
+                const today = new Date();
+                const isToday = day === today.getDate() && bulan === today.getMonth() + 1 && tahun === today.getFullYear();
+                const dayEvents = day ? eventsByDay[day] || [] : [];
+
+                return (
+                  <div key={idx} className={`border rounded-xl p-1 flex flex-col justify-between transition min-h-0 overflow-hidden ${!day ? "bg-slate-50/50 border-dashed border-slate-200" : "bg-white hover:border-slate-400"}`}>
+                    {day && (
+                      <>
+                        {/* Penanda Angka Tanggal */}
+                        <div className="flex justify-between items-center flex-shrink-0">
+                          <div className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded-full ${isToday ? "bg-blue-600 text-white shadow-sm" : "text-slate-700"}`}>{day}</div>
+                          {dayEvents.length > 0 && <span className="text-[9px] bg-slate-100 text-slate-600 font-extrabold px-1 py-0.2 rounded-full border">{dayEvents.length}</span>}
+                        </div>
+
+                        {/* AREA SPASIAL LABEL KEGIATAN */}
+                        {/* Ditambahkan overflow-y-auto jika dalam 1 hari ada event sangat banyak, grid selnya tidak akan rusak jebol keluar */}
+                        <div className="mt-1 space-y-1 flex-1 overflow-y-auto min-h-0 pr-0.5 scrollbar-thin">
+                          {dayEvents.map((event) => (
+                            <button
+                              key={event.id}
+                              onClick={() => router.push(`/dashboard/kegiatan/${event.id}`)}
+                              title={`${event.judul} (${event.waktu_mulai.slice(0, 5)})`}
+                              className={`w-full text-left text-[9px] font-bold px-1 py-0.5 rounded border transition truncate block ${
+                                event.status === "aktif" ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100" : "bg-slate-50 text-slate-500 border-slate-200 line-through"
+                              }`}
+                            >
+                              {event.waktu_mulai.slice(0, 5)} {event.judul}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

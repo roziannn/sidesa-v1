@@ -105,15 +105,21 @@ export default function KegiatanPage() {
     {
       key: "status",
       label: "Status",
-      render: (val) => <span className={`px-2 py-1 rounded-full text-xs font-semibold ${val === "Aktif" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100"}`}>{val}</span>,
+      render: (_, row) => <span className={`px-2 py-1 rounded-full text-xs font-semibold ${row.status === "Aktif" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100"}`}>{row.status}</span>,
     },
     {
       key: "aksi",
       label: "Aksi",
       render: (_, row) => (
-        <div className="flex gap-2 text-xs">
+        <div className="flex items-center gap-3 text-xs">
           <button onClick={() => router.push(`/dashboard/kegiatan/${row.id}`)} className="text-emerald-600 font-semibold hover:underline">
             Detail
+          </button>
+
+          <span className="text-slate-300">|</span>
+
+          <button onClick={() => router.push(`/dashboard/kegiatan/${row.id}/edit`)} className="text-amber-600 font-semibold hover:underline">
+            Edit
           </button>
         </div>
       ),

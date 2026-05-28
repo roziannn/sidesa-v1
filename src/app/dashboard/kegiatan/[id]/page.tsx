@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { supabaseClient } from "@/lib/supabase/client";
 import { Trash2, UserPlus } from "lucide-react";
+import { useToast } from "@/hooks/useToast"; // 1. Import hook toast
 
 // Interfaces
 interface Profile {
@@ -35,6 +36,7 @@ interface Kegiatan {
 
 export default function DetailKegiatanPage() {
   const { id } = useParams() as { id: string };
+  const { showToast } = useToast(); // 2. Inisialisasi hook toast
   const [kegiatan, setKegiatan] = useState<Kegiatan | null>(null);
   const [peserta, setPeserta] = useState<Peserta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,7 @@ export default function DetailKegiatanPage() {
   const [showDeleteModal, setShowDeleteModal] = useState<Peserta | null>(null);
   const [alasanBatal, setAlasanBatal] = useState("");
   const [wargaList, setWargaList] = useState<Profile[]>([]);
-  const [newPeserta, setNewPeserta] = useState({ profil_id: "", catatan: "" });
+  const [newPeserta, setNewPeserta] = useState({ warga_id: "", catatan: "" });
 
   const loadData = useCallback(async () => {
     if (!id) return;
@@ -68,38 +70,57 @@ export default function DetailKegiatanPage() {
   }, [loadData, fetchWarga]);
 
   const handleTambahPeserta = async () => {
-    // Validasi: Pastikan sudah memilih warga
-    if (!newPeserta.profil_id) {
-      alert("Silakan pilih warga terlebih dahulu!");
+    if (!newPeserta.warga_id) {
+      showToast("error", "Gagal", "Silakan pilih warga terlebih dahulu!");
+      return;
+    }
+
+    // 3. LOGIKA CEK DUPLIKASI: Cari apakah warga_id sudah ada di array peserta saat ini
+    const apakahSudahTerdaftar = peserta.some((p) => p.profiles?.id === newPeserta.warga_id);
+
+    if (apakahSudahTerdaftar) {
+      showToast("error", "Peserta Sudah Ada", "Warga ini sudah terdaftar dalam kegiatan ini.");
       return;
     }
 
     const { error } = await supabaseClient.from("peserta_kegiatan").insert({
       kegiatan_id: id,
-      profil_id: newPeserta.profil_id,
-      catatan: newPeserta.catatan || null, // Pastikan catatan null jika kosong
+      warga_id: newPeserta.warga_id,
+      catatan: newPeserta.catatan || null,
     });
 
     if (error) {
       console.error("Error saat menambah peserta:", error);
-      alert("Gagal menambahkan peserta: " + error.message);
+      showToast("error", "Gagal Menambahkan", error.message);
     } else {
+      showToast("success", "Berhasil", "Peserta baru telah ditambahkan ke kegiatan.");
       setShowAddModal(false);
-      setNewPeserta({ profil_id: "", catatan: "" }); // Reset form
+      setNewPeserta({ warga_id: "", catatan: "" }); // Reset form
       loadData(); // Refresh data
     }
   };
 
   const handleHapusPeserta = async (pId: string) => {
-    await supabaseClient.from("peserta_kegiatan").delete().eq("id", pId);
-    setShowDeleteModal(null);
-    loadData();
+    const { error } = await supabaseClient.from("peserta_kegiatan").delete().eq("id", pId);
+    if (error) {
+      showToast("error", "Gagal", "Gagal menghapus peserta.");
+    } else {
+      showToast("success", "Berhasil Dihapus", "Peserta dikeluarkan dari kegiatan.");
+      setShowDeleteModal(null);
+      loadData();
+    }
   };
 
   const handleBatalkan = async () => {
-    await supabaseClient.from("kegiatan").update({ status: "Dibatalkan", keterangan_batal: alasanBatal }).eq("id", id);
-    setShowCancelModal(false);
-    loadData();
+    const { error } = await supabaseClient.from("kegiatan").update({ status: "Dibatalkan", keterangan_batal: alasanBatal }).eq("id", id);
+
+    if (error) {
+      showToast("error", "Gagal", "Gagal membatalkan kegiatan.");
+    } else {
+      showToast("success", "Kegiatan Dibatalkan", "Status kegiatan berhasil diperbarui.");
+      setShowCancelModal(false);
+      loadData();
+    }
   };
 
   if (loading) return <div className="p-8 text-center">Memuat data...</div>;
@@ -160,14 +181,11 @@ export default function DetailKegiatanPage() {
         </div>
       </div>
 
+      {/* SECTION 2: TABEL PESERTA */}
       <div className="bg-white p-6 rounded-xl border shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-bold text-lg">Peserta Terdaftar ({terdaftar} orang)</h2>
 
-          {/* Debug: Cek status kegiatan di console jika tombol tidak muncul */}
-          {console.log("Status kegiatan:", kegiatan.status)}
-
-          {/* Gunakan toLowerCase() agar case-insensitive (misal: "Aktif" vs "aktif") */}
           {kegiatan.status.toLowerCase() === "aktif" && (
             <button disabled={sisa <= 0} onClick={() => setShowAddModal(true)} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50 disabled:bg-slate-400">
               <UserPlus className="w-4 h-4" />
@@ -193,11 +211,11 @@ export default function DetailKegiatanPage() {
               {peserta.map((p, idx) => (
                 <tr key={p.id} className="border-b">
                   <td className="py-3">{idx + 1}</td>
-                  <td className="py-3 font-medium">{p.profiles.nama}</td>
+                  <td className="py-3 font-medium">{p.profiles?.nama || "Tidak Terdata"}</td>
                   <td className="py-3">
-                    {p.profiles.rt}/{p.profiles.rw}
+                    {p.profiles?.rt || "00"}/{p.profiles?.rw || "00"}
                   </td>
-                  <td className="py-3">{p.profiles.no_hp}</td>
+                  <td className="py-3">{p.profiles?.no_hp || "-"}</td>
                   <td className="py-3">{new Date(p.created_at).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
                   <td className="py-3 text-right">
                     <button onClick={() => setShowDeleteModal(p)} className="text-red-600 hover:bg-red-50 p-1 rounded">
@@ -216,7 +234,7 @@ export default function DetailKegiatanPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-md">
             <h3 className="font-bold mb-4">Tambah Peserta</h3>
-            <select className="w-full border p-2 rounded mb-3" onChange={(e) => setNewPeserta({ ...newPeserta, profil_id: e.target.value })}>
+            <select className="w-full border p-2 rounded mb-3 text-sm bg-white" onChange={(e) => setNewPeserta({ ...newPeserta, warga_id: e.target.value })}>
               <option value="">Pilih Warga...</option>
               {wargaList.map((w) => (
                 <option key={w.id} value={w.id}>
@@ -224,12 +242,12 @@ export default function DetailKegiatanPage() {
                 </option>
               ))}
             </select>
-            <textarea placeholder="Catatan (Opsional)" className="w-full border p-2 rounded mb-4" onChange={(e) => setNewPeserta({ ...newPeserta, catatan: e.target.value })} />
+            <textarea placeholder="Catatan (Opsional)" className="w-full border p-2 rounded mb-4 text-sm" onChange={(e) => setNewPeserta({ ...newPeserta, catatan: e.target.value })} />
             <div className="flex gap-2">
-              <button onClick={() => setShowAddModal(false)} className="flex-1 border py-2 rounded">
+              <button onClick={() => setShowAddModal(false)} className="flex-1 border py-2 rounded text-sm font-semibold">
                 Batal
               </button>
-              <button onClick={handleTambahPeserta} className="flex-1 bg-emerald-600 text-white py-2 rounded">
+              <button onClick={handleTambahPeserta} className="flex-1 bg-emerald-600 text-white py-2 rounded text-sm font-semibold">
                 Simpan
               </button>
             </div>
@@ -237,18 +255,18 @@ export default function DetailKegiatanPage() {
         </div>
       )}
 
-      {/* MODAL HAPUS & BATAL (Omitted for brevity, logic identical to previous step) */}
+      {/* MODAL HAPUS */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-sm">
-            <p>
-              Hapus <strong>{showDeleteModal.profiles.nama}</strong>?
+            <p className="text-sm">
+              Hapus <strong>{showDeleteModal.profiles?.nama}</strong> dari daftar kegiatan?
             </p>
             <div className="flex gap-2 mt-4">
-              <button onClick={() => setShowDeleteModal(null)} className="flex-1 border py-2 rounded">
+              <button onClick={() => setShowDeleteModal(null)} className="flex-1 border py-2 rounded text-sm font-semibold">
                 Batal
               </button>
-              <button onClick={() => handleHapusPeserta(showDeleteModal.id)} className="flex-1 bg-red-600 text-white py-2 rounded">
+              <button onClick={() => handleHapusPeserta(showDeleteModal.id)} className="flex-1 bg-red-600 text-white py-2 rounded text-sm font-semibold">
                 Hapus
               </button>
             </div>
@@ -256,16 +274,17 @@ export default function DetailKegiatanPage() {
         </div>
       )}
 
+      {/* MODAL BATALKAN KEGIATAN */}
       {showCancelModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-sm">
             <h3 className="font-bold text-red-600 mb-2">Batalkan Kegiatan</h3>
-            <textarea placeholder="Alasan..." className="w-full border p-2 rounded mb-4" onChange={(e) => setAlasanBatal(e.target.value)} />
+            <textarea placeholder="Alasan pembatalan..." className="w-full border p-2 rounded mb-4 text-sm" onChange={(e) => setAlasanBatal(e.target.value)} />
             <div className="flex gap-2">
-              <button onClick={() => setShowCancelModal(false)} className="flex-1 border py-2 rounded">
+              <button onClick={() => setShowCancelModal(false)} className="flex-1 border py-2 rounded text-sm font-semibold">
                 Batal
               </button>
-              <button onClick={handleBatalkan} className="flex-1 bg-red-600 text-white py-2 rounded">
+              <button onClick={handleBatalkan} className="flex-1 bg-red-600 text-white py-2 rounded text-sm font-semibold">
                 Konfirmasi
               </button>
             </div>

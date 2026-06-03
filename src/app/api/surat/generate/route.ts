@@ -20,37 +20,49 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
 
-    // =========================================================================
-    // STEP 1: AMBIL DATA LENGKAP (SURAT + JOIN PROFILES)
-    // =========================================================================
-    const { data: surat, error: suratError } = await supabase
-      .from("surat")
-      .select(
-        `
-        id, jenis_surat, keperluan, status, pemohon_id,
-        profiles!pemohon_id(id, nama, rt, rw)
-      `,
-      )
-      .eq("id", surat_id)
-      .maybeSingle();
+   
+// =========================================================================
+// STEP 1: AMBIL DATA LENGKAP (SEKARANG SUDAH ADA NIK DI PROFILES)
+// =========================================================================
+const { data: surat, error: suratError } = await supabase
+  .from("surat")
+  .select(`
+    id, jenis_surat, keperluan, status, pemohon_id,
+    profiles!pemohon_id(id, nama, rt, rw, nik)
+  `)
+  .eq("id", surat_id)
+  .maybeSingle();
 
-    if (suratError) throw new Error(`Database error: ${suratError.message}`);
-    if (!surat) return NextResponse.json({ error: "Permohonan surat tidak ditemukan." }, { status: 404 });
+if (suratError) throw new Error(`Database error: ${suratError.message}`);
+if (!surat) return NextResponse.json({ error: "Permohonan surat tidak ditemukan." }, { status: 404 });
 
-    const pemohon = (surat as any).profiles;
-    if (!pemohon) return NextResponse.json({ error: "Profil pemohon tidak ditemukan." }, { status: 404 });
+const pemohon = (surat as any).profiles;
+if (!pemohon || !pemohon.nik) {
+  return NextResponse.json({ error: "Profil pemohon atau NIK tidak ditemukan." }, { status: 404 });
+}
 
-    // =========================================================================
-    // STEP 2: AMBIL DETAIL DATA ANGGOTA (BERDASARKAN NIK)
-    // =========================================================================
-    const { data: anggota } = await supabase.from("anggota").select("nik, tgl_lahir, jenis_kelamin, hubungan, nama").eq("nik", pemohon.nik).maybeSingle();
+// =========================================================================
+// STEP 2: AMBIL DETAIL DATA ANGGOTA (BERDASARKAN NIK YANG SUDAH PASTI ADA)
+// =========================================================================
+const { data: anggota, error: anggotaError } = await supabase
+  .from("anggota")
+  .select("nik, nama, tgl_lahir, tempat_lahir, agama, jenis_kelamin, alamat, pekerjaan")
+  .eq("nik", pemohon.nik) // Sekarang pencarian berdasarkan NIK yang unik
+  .maybeSingle();
 
-    const dataWargaSipil = anggota || ({} as any);
+if (anggotaError) {
+  console.error("Error saat mencari data anggota:", anggotaError.message);
+}
+
+const dataWargaSipil = anggota || ({} as any);
 
     // =========================================================================
     // STEP 3: GENERATE NOMOR SURAT
     // =========================================================================
-    const { count, error: countError } = await supabase.from("surat").select("*", { count: "exact", head: true }).eq("status", "selesai");
+    const { count, error: countError } = await supabase
+      .from("surat")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "selesai");
 
     if (countError) throw new Error(`Gagal menghitung nomor: ${countError.message}`);
 
@@ -104,9 +116,12 @@ export async function POST(request: Request) {
 
     if (uploadError) throw new Error(`Upload Gagal: ${uploadError.message}`);
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("surat-output").getPublicUrl(storagePath);
+    // Perbaikan: createSignedUrl membutuhkan durasi (detik)
+    const { data: signedData, error: signedUrlError } = await supabase.storage
+      .from("surat-output")
+      .createSignedUrl(storagePath, 3600); 
+
+    if (signedUrlError) throw new Error(`Gagal generate link: ${signedUrlError.message}`);
 
     // =========================================================================
     // STEP 7: UPDATE STATUS SURAT
@@ -115,14 +130,14 @@ export async function POST(request: Request) {
       .from("surat")
       .update({
         status: "selesai",
-        file_url: publicUrl,
+        file_url: signedData.signedUrl,
         catatan_petugas: `Surat digenerate pada ${now.toLocaleString("id-ID")} WIB.`,
       })
       .eq("id", surat_id);
 
     if (updateError) throw new Error(`Update Status Gagal: ${updateError.message}`);
 
-    return NextResponse.json({ success: true, file_url: publicUrl, nomor_surat: nomorSuratFinal });
+    return NextResponse.json({ success: true, file_url: signedData.signedUrl, nomor_surat: nomorSuratFinal });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

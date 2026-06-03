@@ -85,24 +85,42 @@ export const generateSuratDomisili = (payload: SuratDomisiliPayload): jsPDF => {
   currentY += 5;
   doc.text("Kabupaten " + desa.nama_kabupaten + ", menerangkan bahwa:", startX, currentY);
 
-  // ================= 4. TABEL BIODATA =================
+ // ================= 4. TABEL BIODATA =================
   currentY += 8;
   const labelX = startX + 10;
   const titikDuaX = labelX + 40;
   const valueX = titikDuaX + 4;
 
+  // 1. Konversi Jenis Kelamin
+  const jkFormatted = warga.jenis_kelamin?.toUpperCase() === 'L' 
+    ? "Laki-laki" 
+    : warga.jenis_kelamin?.toUpperCase() === 'P' 
+    ? "Perempuan" 
+    : warga.jenis_kelamin || "-";
+
+  // 2. Format Tanggal Lahir (Misal: 2026-05-07 menjadi 7 Mei 2026)
+  const formatTanggal = (tgl: string) => {
+    if (!tgl || tgl === "-") return "-";
+    const date = new Date(tgl);
+    return date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
   const listBiodata = [
     { label: "Nama Lengkap", value: warga.nama },
     { label: "NIK", value: warga.nik },
-    { label: "Tempat / Tgl Lahir", value: `${warga.tempat_lahir}, ${warga.tanggal_lahir}` },
-    { label: "Jenis Kelamin", value: warga.jenis_kelamin },
+    { label: "Tempat / Tgl Lahir", value: `${warga.tempat_lahir || "-"}, ${formatTanggal(warga.tanggal_lahir)}` },
+    { label: "Jenis Kelamin", value: jkFormatted },
     { label: "Agama", value: warga.agama },
     { label: "Pekerjaan", value: warga.pekerjaan },
-    { label: "Alamat", value: `${warga.alamat}, RT ${warga.rt} / RW ${warga.rw}` },
+    { label: "Alamat", value: `${warga.alamat || "-"}, RT ${warga.rt} / RW ${warga.rw}` },
   ];
 
   listBiodata.forEach((item) => {
-    doc.setFont("Helvetica", item.label === "Nama Lengkap" || item.label === "NIK" ? "bold" : "normal");
+    doc.setFont("Helvetica", item.label === "NIK" ? "bold" : "normal");
     doc.text(item.label, labelX, currentY);
     doc.text(":", titikDuaX, currentY);
 

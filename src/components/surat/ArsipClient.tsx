@@ -1,0 +1,107 @@
+"use client";
+
+import { useState } from "react";
+import DataTable, { Column } from "@/components/DataTable";
+import { RefreshCw, Eye } from "lucide-react";
+import ConfirmModal from "@/components/ConfirmModal";
+import { useToast } from "@/hooks/useToast";
+
+export default function ArsipClient({ initialData }: { initialData: any[] }) {
+  const [data] = useState(initialData);
+  const [search, setSearch] = useState("");
+  
+  // Hook Toast
+  const { showToast } = useToast();
+  
+  // State untuk Modal & Loading
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSurat, setSelectedSurat] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+ const handleGenerate = async () => {
+    if (!selectedSurat) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/surat/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }, // Tambahkan header ini
+        body: JSON.stringify({ surat_id: selectedSurat.id }),
+      });
+      
+      if (!res.ok) throw new Error("Gagal");
+
+      // PANGGIL DENGAN 3 ARGUMEN (variant, title, message)
+      showToast("success", "Berhasil!", "Surat berhasil digenerate ulang.");
+      
+      setIsModalOpen(false);
+      window.location.reload(); // Refresh data
+    } catch (err) {
+      // PANGGIL DENGAN 3 ARGUMEN
+      showToast("error", "Gagal!", "Terjadi kesalahan saat generate surat.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const columns: Column<any>[] = [
+    { key: "nomor_surat", label: "Nomor Surat" },
+    { key: "pemohon", label: "Pemohon", render: (_, row) => row.profiles?.nama || "-" },
+    { key: "jenis_surat", label: "Jenis" },
+    { 
+      key: "created_at", 
+      label: "Tanggal", 
+      render: (val) => val ? new Date(val as string).toLocaleDateString("id-ID") : "-" 
+    },
+    {
+      key: "aksi",
+      label: "Aksi",
+      render: (_, row) => (
+        <div className="flex gap-2">
+          <button 
+            onClick={() => window.open(row.file_url, "_blank")} 
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition"
+          >
+            <Eye className="w-3.5 h-3.5" /> Lihat
+          </button>
+          <button 
+            onClick={() => { setSelectedSurat(row); setIsModalOpen(true); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-md hover:bg-emerald-700 transition"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> Generate
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  // Logic filter data
+  const filteredData = data.filter((item) => 
+    item.profiles?.nama?.toLowerCase().includes(search.toLowerCase()) || 
+    item.nomor_surat?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-4">
+      <input 
+        type="text"
+        placeholder="Cari nama atau nomor surat..." 
+        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)} 
+      />
+      
+      <DataTable columns={columns} data={filteredData} />
+
+      <ConfirmModal 
+        isOpen={isModalOpen}
+        title="Konfirmasi Generate Ulang"
+        message={`Apakah Anda yakin ingin men-generate ulang surat ${selectedSurat?.nomor_surat || ''}? Proses ini akan memperbarui file PDF arsip.`}
+        confirmLabel="Ya, Generate Ulang"
+        confirmVariant="primary"
+        isLoading={isLoading}
+        onConfirm={handleGenerate}
+        onCancel={() => setIsModalOpen(false)}
+      />
+    </div>
+  );
+}

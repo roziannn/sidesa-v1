@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { House, Users, HandHeart, Calendar, FileText, Wallet, Menu, X, LogOut, User } from "lucide-react";
+import { House, Users, HandHeart, Calendar, FileText, Wallet, Menu, X, LogOut, User, FileWarning, Box } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -26,10 +26,12 @@ export default function DashboardLayoutClient({ children, userProfile }: Dashboa
   const menuItems = [
     { name: "Dashboard", href: "/dashboard", icon: House },
     { name: "Data Keluarga", href: "/dashboard/keluarga", icon: Users },
+    { name: "Data Aset", href: "/dashboard/aset", icon: Box },
     { name: "Bantuan Sosial", href: "/dashboard/bansos", icon: HandHeart },
     { name: "Kegiatan Desa", href: "/dashboard/kegiatan", icon: Calendar },
     { name: "Surat & Izin", href: "/dashboard/surat", icon: FileText },
     { name: "Retribusi", href: "/dashboard/retribusi", icon: Wallet },
+    { name: "Pengaduan", href: "/dashboard/pengaduan", icon: FileWarning },
   ];
 
   // PERBAIKAN LOGIKA 1: Deteksi menu aktif secara hierarki/induk rute (Aman untuk Tambah/Edit/Detail)

@@ -18,6 +18,31 @@ export default function ArsipClient({ initialData }: { initialData: any[] }) {
   const [selectedSurat, setSelectedSurat] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+    const handleUpdateStatus = async (
+    suratId: string, 
+    status: 'diproses' | 'selesai' | 'ditolak', 
+    catatan?: string
+  ) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/surat/update-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ surat_id: suratId, new_status: status, catatan: catatan }),
+      });
+
+      if (!res.ok) throw new Error("Gagal memperbarui status");
+
+      showToast("success", "Berhasil!", `Status surat diubah menjadi ${status}.`);
+
+      window.location.reload();
+    } catch (err: any) {
+      showToast("error", "Gagal!", err.message || "Terjadi kesalahan sistem.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
  const handleGenerate = async () => {
     if (!selectedSurat) return;
     setIsLoading(true);
@@ -52,26 +77,43 @@ export default function ArsipClient({ initialData }: { initialData: any[] }) {
       label: "Tanggal", 
       render: (val) => val ? new Date(val as string).toLocaleDateString("id-ID") : "-" 
     },
-    {
-      key: "aksi",
-      label: "Aksi",
-      render: (_, row) => (
-        <div className="flex gap-2">
-          <button 
-            onClick={() => window.open(row.file_url, "_blank")} 
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition"
-          >
-            <Eye className="w-3.5 h-3.5" /> Lihat
-          </button>
-          <button 
-            onClick={() => { setSelectedSurat(row); setIsModalOpen(true); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-md hover:bg-emerald-700 transition"
-          >
-            <RefreshCw className="w-3.5 h-3.5" /> Generate
-          </button>
-        </div>
-      )
-    }
+   {
+  key: "aksi",
+  label: "Aksi",
+  render: (_, row) => (
+    <div className="flex gap-2">
+      {/* Tombol Proses (Hanya muncul jika status masih pending) */}
+      {row.status === 'pending' && (
+        <button 
+          onClick={() => handleUpdateStatus(row.id, 'diproses')}
+          className="px-3 py-1 bg-amber-500 text-white text-xs rounded-md hover:bg-amber-600 transition"
+        >
+          Proses
+        </button>
+      )}
+
+      {/* Tombol Selesai (Memanggil fungsi generate & update status) */}
+      {row.status === 'diproses' && (
+        <button 
+          onClick={() => handleUpdateStatus(row.id, 'selesai')}
+          className="px-3 py-1 bg-emerald-600 text-white text-xs rounded-md hover:bg-emerald-700 transition"
+        >
+          Selesai
+        </button>
+      )}
+      
+      {/* Tombol Download (Hanya jika status selesai) */}
+      {row.status === 'selesai' && (
+        <button 
+          onClick={() => window.open(row.file_url, "_blank")}
+          className="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition"
+        >
+          Download
+        </button>
+      )}
+    </div>
+  )
+}
   ];
 
   // Logic filter data

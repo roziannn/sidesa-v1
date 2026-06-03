@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateSuratDomisili } from "@/lib/pdf/templates/SuratDomisili";
 import { SuratDomisiliPayload } from "@/types/surat";
+import { sendEmail } from "@/lib/email/sendEmail"; // Impor fungsi sendEmail
+import { createSuratStatusEmail } from "@/lib/email/templates/suratStatusEmail"; // Impor template
 
 const toRomawi = (month: number): string => {
   const romawiArr = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
@@ -20,72 +22,56 @@ export async function POST(request: Request) {
 
     const supabase = await createClient();
 
-   
-// =========================================================================
-// STEP 1: AMBIL DATA LENGKAP (SEKARANG SUDAH ADA NIK DI PROFILES)
-// =========================================================================
-const { data: surat, error: suratError } = await supabase
-  .from("surat")
-  .select(`
-    id, jenis_surat, keperluan, status, pemohon_id,
-    profiles!pemohon_id(id, nama, rt, rw, nik)
-  `)
-  .eq("id", surat_id)
-  .maybeSingle();
+    // STEP 1 & 2: Ambil Data Lengkap (Surat, Pemohon, Anggota)
+    const { data: surat, error: suratError } = await supabase
+      .from("surat")
+      .select(`
+        id, jenis_surat, keperluan, status, pemohon_id,
+        profiles!pemohon_id(id, nama, email, rt, rw, nik)
+      `)
+      .eq("id", surat_id)
+      .maybeSingle();
 
-if (suratError) throw new Error(`Database error: ${suratError.message}`);
-if (!surat) return NextResponse.json({ error: "Permohonan surat tidak ditemukan." }, { status: 404 });
+    if (suratError) throw new Error(`Database error: ${suratError.message}`);
+    if (!surat) return NextResponse.json({ error: "Permohonan surat tidak ditemukan." }, { status: 404 });
 
-const pemohon = (surat as any).profiles;
-if (!pemohon || !pemohon.nik) {
-  return NextResponse.json({ error: "Profil pemohon atau NIK tidak ditemukan." }, { status: 404 });
-}
+    const pemohon = (surat as any).profiles;
+    if (!pemohon || !pemohon.nik) {
+      return NextResponse.json({ error: "Profil pemohon atau NIK tidak ditemukan." }, { status: 404 });
+    }
 
-// =========================================================================
-// STEP 2: AMBIL DETAIL DATA ANGGOTA (BERDASARKAN NIK YANG SUDAH PASTI ADA)
-// =========================================================================
-const { data: anggota, error: anggotaError } = await supabase
-  .from("anggota")
-  .select("nik, nama, tgl_lahir, tempat_lahir, agama, jenis_kelamin, alamat, pekerjaan")
-  .eq("nik", pemohon.nik) // Sekarang pencarian berdasarkan NIK yang unik
-  .maybeSingle();
+    const { data: dataWargaSipil } = await supabase
+      .from("anggota")
+      .select("nik, nama, tgl_lahir, tempat_lahir, agama, jenis_kelamin, alamat, pekerjaan")
+      .eq("nik", pemohon.nik)
+      .maybeSingle();
 
-if (anggotaError) {
-  console.error("Error saat mencari data anggota:", anggotaError.message);
-}
+    const warga = dataWargaSipil || ({} as any);
 
-const dataWargaSipil = anggota || ({} as any);
-
-    // =========================================================================
-    // STEP 3: GENERATE NOMOR SURAT
-    // =========================================================================
-    const { count, error: countError } = await supabase
+    // STEP 3: Generate Nomor Surat
+    const { count } = await supabase
       .from("surat")
       .select("*", { count: "exact", head: true })
       .eq("status", "selesai");
-
-    if (countError) throw new Error(`Gagal menghitung nomor: ${countError.message}`);
 
     const nextUrutan = ((count || 0) + 1).toString().padStart(3, "0");
     const now = new Date();
     const nomorSuratFinal = `${nextUrutan}/KADES/${toRomawi(now.getMonth() + 1)}/${now.getFullYear()}`;
 
-    // =========================================================================
-    // STEP 4 & 5: GENERATE PDF
-    // =========================================================================
+    // STEP 4 & 5: Generate PDF
     const payloadTemplate: SuratDomisiliPayload = {
       nomor_urut: nextUrutan,
       keperluan: surat.keperluan || "-",
       tanggal_generate: now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
       warga: {
-        nama: pemohon.nama || dataWargaSipil.nama || "-",
-        nik: pemohon.nik || dataWargaSipil.nik || "-",
-        tempat_lahir: dataWargaSipil.tempat_lahir || "-",
-        tanggal_lahir: dataWargaSipil.tgl_lahir || "-",
-        jenis_kelamin: dataWargaSipil.jenis_kelamin || "laki-laki",
-        agama: dataWargaSipil.agama || "-",
-        pekerjaan: dataWargaSipil.pekerjaan || "-",
-        alamat: dataWargaSipil.alamat || "-",
+        nama: pemohon.nama || warga.nama || "-",
+        nik: pemohon.nik || warga.nik || "-",
+        tempat_lahir: warga.tempat_lahir || "-",
+        tanggal_lahir: warga.tgl_lahir || "-",
+        jenis_kelamin: warga.jenis_kelamin || "laki-laki",
+        agama: warga.agama || "-",
+        pekerjaan: warga.pekerjaan || "-",
+        alamat: warga.alamat || "-",
         rt: pemohon.rt || "00",
         rw: pemohon.rw || "00",
       },
@@ -105,9 +91,7 @@ const dataWargaSipil = anggota || ({} as any);
     const doc = generateSuratDomisili(payloadTemplate);
     const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
 
-    // =========================================================================
-    // STEP 6: UPLOAD KE STORAGE
-    // =========================================================================
+    // STEP 6: Upload ke Storage
     const storagePath = `surat/${surat_id}/${nomorSuratFinal.replace(/\//g, "-")}.pdf`;
     const { error: uploadError } = await supabase.storage.from("surat-output").upload(storagePath, pdfBuffer, {
       contentType: "application/pdf",
@@ -116,16 +100,13 @@ const dataWargaSipil = anggota || ({} as any);
 
     if (uploadError) throw new Error(`Upload Gagal: ${uploadError.message}`);
 
-    // Perbaikan: createSignedUrl membutuhkan durasi (detik)
     const { data: signedData, error: signedUrlError } = await supabase.storage
       .from("surat-output")
       .createSignedUrl(storagePath, 3600); 
 
     if (signedUrlError) throw new Error(`Gagal generate link: ${signedUrlError.message}`);
 
-    // =========================================================================
-    // STEP 7: UPDATE STATUS SURAT
-    // =========================================================================
+    // STEP 7: Update Status
     const { error: updateError } = await supabase
       .from("surat")
       .update({
@@ -136,6 +117,21 @@ const dataWargaSipil = anggota || ({} as any);
       .eq("id", surat_id);
 
     if (updateError) throw new Error(`Update Status Gagal: ${updateError.message}`);
+
+    // STEP 8: Kirim Notifikasi Email (Non-blocking)
+    if (pemohon.email) {
+      sendEmail(
+        pemohon.email,
+        `Surat Anda Selesai: ${surat.jenis_surat}`,
+        createSuratStatusEmail({
+          namaPemohon: pemohon.nama,
+          jenisSurat: surat.jenis_surat,
+          status: 'selesai',
+          downloadUrl: signedData.signedUrl,
+          namaDesaInfo: process.env.NEXT_PUBLIC_NAMA_DESA || "Desa Digital"
+        })
+      ).catch(err => console.error("Email notifikasi gagal:", err));
+    }
 
     return NextResponse.json({ success: true, file_url: signedData.signedUrl, nomor_surat: nomorSuratFinal });
   } catch (error: any) {

@@ -100,19 +100,34 @@ export default function SuratClient({ initialSurat }: ClientProps) {
     return <FileText className="w-4 h-4 text-slate-600" />;
   };
 
-  // 5. MUTASI STATUS SURAT (UPDATE/PROSES/SELESAI)
+  // 5. MUTASI STATUS SURAT (UPDATE/PROSES/SELESAI) -> SEKARANG LEWAT API ROUTE AGAR KIRIM EMAIL
   const handleUpdateStatus = async (id: string, newStatus: "diproses" | "selesai", catatan?: string) => {
     setLoadingId(id);
     try {
-      const updateData: any = { status: newStatus };
-      if (catatan) updateData.catatan_petugas = catatan;
+      // UBAH: Dari supabaseClient langsung, menjadi fetch ke API Route
+      const response = await fetch("/api/surat/update-status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          surat_id: id, 
+          new_status: newStatus, 
+          catatan: catatan || (newStatus === "diproses" ? "Surat sedang diverifikasi oleh petugas." : "Surat telah selesai diproses.")
+        }),
+      });
 
-      const { error } = await supabaseClient.from("surat").update(updateData).eq("id", id);
+      const result = await response.json();
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(result.error || `Gagal mengubah status menjadi ${newStatus}`);
+      }
 
-      setListSurat((prev) => prev.map((s) => (s.id === id ? { ...s, status: newStatus, catatan_petugas: catatan || s.catatan_petugas } : s)));
-      showToast("success", "Status Diperbarui", `Surat berhasil dipindahkan ke status '${newStatus}'.`);
+      setListSurat((prev) => 
+        prev.map((s) => (s.id === id ? { ...s, status: newStatus, catatan_petugas: catatan || s.catatan_petugas } : s))
+      );
+      
+      showToast("success", "Status Diperbarui", `Surat berhasil dipindahkan ke status '${newStatus}' dan email notifikasi telah dikirim.`);
       router.refresh();
     } catch (err: any) {
       showToast("error", "Gagal memperbarui", err.message);

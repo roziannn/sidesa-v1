@@ -215,29 +215,46 @@ export default function SuratClient({ initialSurat }: ClientProps) {
   };
 
   // 6. SUBMIT PENOLAKAN
-  const handleKirimPenolakan = async () => {
-    if (alasanTolak.trim().length < 20) {
-      showToast("error", "Validasi Gagal", "Alasan penolakan minimal wajib 20 karakter!");
-      return;
-    }
+  // 6. SUBMIT PENOLAKAN
+const handleKirimPenolakan = async () => {
+  if (alasanTolak.trim().length < 20) {
+    showToast("error", "Validasi Gagal", "Alasan penolakan minimal wajib 20 karakter!");
+    return;
+  }
 
-    const id = modalTolak.suratId;
-    if (!id) return;
+  const id = modalTolak.suratId;
+  if (!id) return;
 
-    try {
-      const { error } = await supabaseClient.from("surat").update({ status: "ditolak", catatan_petugas: alasanTolak }).eq("id", id);
+  setLoadingId(id); // Set loading agar user tahu proses sedang berjalan
+  try {
+    // Panggil API Route update-status (yang otomatis kirim email)
+    const response = await fetch("/api/surat/update-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        surat_id: id, 
+        new_status: "ditolak", 
+        catatan: alasanTolak 
+      }),
+    });
 
-      if (error) throw error;
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Gagal menolak surat");
 
-      setListSurat((prev) => prev.map((s) => (s.id === id ? { ...s, status: "ditolak", catatan_petugas: alasanTolak } : s)));
-      showToast("success", "Surat Ditolak", "Alasan penolakan telah dikirim ke pemohon.");
-      setModalTolak({ isOpen: false, suratId: null });
-      setAlasanTolak("");
-      router.refresh();
-    } catch (err: any) {
-      showToast("error", "Gagal", err.message);
-    }
-  };
+    setListSurat((prev) => 
+      prev.map((s) => (s.id === id ? { ...s, status: "ditolak", catatan_petugas: alasanTolak } : s))
+    );
+    
+    showToast("success", "Surat Ditolak", "Alasan penolakan telah dikirim melalui email ke pemohon.");
+    setModalTolak({ isOpen: false, suratId: null });
+    setAlasanTolak("");
+    router.refresh();
+  } catch (err: any) {
+    showToast("error", "Gagal", err.message);
+  } finally {
+    setLoadingId(null);
+  }
+};
 
   // Helper untuk menentukan highlight background sel di dalam DataTable
   const getHighlightClass = (surat: Surat) => {

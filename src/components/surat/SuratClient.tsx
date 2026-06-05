@@ -92,12 +92,16 @@ export default function SuratClient({ initialSurat }: ClientProps) {
   };
 
   // 4. LOGIKA IKON SESUAI JENIS SURAT
+  // const getSuratIcon = (jenis: string) => {
+  //   const j = jenis.toLowerCase();
+  //   if (j.includes("domisili")) return <MapPinIcon className="w-4 h-4 text-sky-600" />;
+  //   if (j.includes("pemberitahuan") || j.includes("pengantar")) return <FileText className="w-4 h-4 text-violet-600" />;
+  //   if (j.includes("kematian") || j.includes("sakit")) return <AlertTriangle className="w-4 h-4 text-amber-600" />;
+  //   return <FileText className="w-4 h-4 text-slate-600" />;
+  // };
+
   const getSuratIcon = (jenis: string) => {
-    const j = jenis.toLowerCase();
-    if (j.includes("domisili")) return <MapPinIcon className="w-4 h-4 text-sky-600" />;
-    if (j.includes("pemberitahuan") || j.includes("pengantar")) return <FileText className="w-4 h-4 text-violet-600" />;
-    if (j.includes("kematian") || j.includes("sakit")) return <AlertTriangle className="w-4 h-4 text-amber-600" />;
-    return <FileText className="w-4 h-4 text-slate-600" />;
+    return <FileText className="w-4 h-4 text-slate-500" />;
   };
 
   // 5. MUTASI STATUS SURAT (UPDATE/PROSES/SELESAI) -> SEKARANG LEWAT API ROUTE AGAR KIRIM EMAIL
@@ -110,10 +114,10 @@ export default function SuratClient({ initialSurat }: ClientProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          surat_id: id, 
-          new_status: newStatus, 
-          catatan: catatan || (newStatus === "diproses" ? "Surat sedang diverifikasi oleh petugas." : "Surat telah selesai diproses.")
+        body: JSON.stringify({
+          surat_id: id,
+          new_status: newStatus,
+          catatan: catatan || (newStatus === "diproses" ? "Surat sedang diverifikasi oleh petugas." : "Surat telah selesai diproses."),
         }),
       });
 
@@ -123,10 +127,8 @@ export default function SuratClient({ initialSurat }: ClientProps) {
         throw new Error(result.error || `Gagal mengubah status menjadi ${newStatus}`);
       }
 
-      setListSurat((prev) => 
-        prev.map((s) => (s.id === id ? { ...s, status: newStatus, catatan_petugas: catatan || s.catatan_petugas } : s))
-      );
-      
+      setListSurat((prev) => prev.map((s) => (s.id === id ? { ...s, status: newStatus, catatan_petugas: catatan || s.catatan_petugas } : s)));
+
       showToast("success", "Status Diperbarui", `Surat berhasil dipindahkan ke status '${newStatus}' dan email notifikasi telah dikirim.`);
       router.refresh();
     } catch (err: any) {
@@ -231,45 +233,43 @@ export default function SuratClient({ initialSurat }: ClientProps) {
 
   // 6. SUBMIT PENOLAKAN
   // 6. SUBMIT PENOLAKAN
-const handleKirimPenolakan = async () => {
-  if (alasanTolak.trim().length < 20) {
-    showToast("error", "Validasi Gagal", "Alasan penolakan minimal wajib 20 karakter!");
-    return;
-  }
+  const handleKirimPenolakan = async () => {
+    if (alasanTolak.trim().length < 20) {
+      showToast("error", "Validasi Gagal", "Alasan penolakan minimal wajib 20 karakter!");
+      return;
+    }
 
-  const id = modalTolak.suratId;
-  if (!id) return;
+    const id = modalTolak.suratId;
+    if (!id) return;
 
-  setLoadingId(id); // Set loading agar user tahu proses sedang berjalan
-  try {
-    // Panggil API Route update-status (yang otomatis kirim email)
-    const response = await fetch("/api/surat/update-status", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        surat_id: id, 
-        new_status: "ditolak", 
-        catatan: alasanTolak 
-      }),
-    });
+    setLoadingId(id); // Set loading agar user tahu proses sedang berjalan
+    try {
+      // Panggil API Route update-status (yang otomatis kirim email)
+      const response = await fetch("/api/surat/update-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          surat_id: id,
+          new_status: "ditolak",
+          catatan: alasanTolak,
+        }),
+      });
 
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Gagal menolak surat");
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Gagal menolak surat");
 
-    setListSurat((prev) => 
-      prev.map((s) => (s.id === id ? { ...s, status: "ditolak", catatan_petugas: alasanTolak } : s))
-    );
-    
-    showToast("success", "Surat Ditolak", "Alasan penolakan telah dikirim melalui email ke pemohon.");
-    setModalTolak({ isOpen: false, suratId: null });
-    setAlasanTolak("");
-    router.refresh();
-  } catch (err: any) {
-    showToast("error", "Gagal", err.message);
-  } finally {
-    setLoadingId(null);
-  }
-};
+      setListSurat((prev) => prev.map((s) => (s.id === id ? { ...s, status: "ditolak", catatan_petugas: alasanTolak } : s)));
+
+      showToast("success", "Surat Ditolak", "Alasan penolakan telah dikirim melalui email ke pemohon.");
+      setModalTolak({ isOpen: false, suratId: null });
+      setAlasanTolak("");
+      router.refresh();
+    } catch (err: any) {
+      showToast("error", "Gagal", err.message);
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   // Helper untuk menentukan highlight background sel di dalam DataTable
   const getHighlightClass = (surat: Surat) => {
@@ -359,19 +359,18 @@ const handleKirimPenolakan = async () => {
           const isRowLoading = loadingId === row.id;
 
           return (
-            <div className={`${getHighlightClass(row)} flex items-center justify-end gap-1.5 whitespace-nowrap`}>
+            <div className={`${getHighlightClass(row)} flex items-center  gap-1.5 whitespace-nowrap`}>
               {/* ================= AKSI PENDING ================= */}
               {row.status === "pending" && (
                 <>
-                  <button disabled={loadingId !== null} onClick={() => handleUpdateStatus(row.id, "diproses")} className="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">
+                  <button onClick={() => handleUpdateStatus(row.id, "diproses")} className="text-blue-600 hover:text-blue-800 font-bold text-xs uppercase">
                     Proses
                   </button>
-                  <button disabled={loadingId !== null} onClick={() => setModalTolak({ isOpen: true, suratId: row.id })} className="border border-red-200 text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
+                  <button onClick={() => setModalTolak({ isOpen: true, suratId: row.id })} className="text-red-600 hover:text-red-800 font-bold text-xs uppercase ml-3">
                     Tolak
                   </button>
                 </>
               )}
-
               {/* ================= AKSI DIPROSES ================= */}
               {row.status === "diproses" && (
                 <>
@@ -399,7 +398,6 @@ const handleKirimPenolakan = async () => {
                   </button>
                 </>
               )}
-
               {/* ================= AKSI SELESAI ================= */}
               {row.status === "selesai" && (
                 <>
@@ -428,7 +426,6 @@ const handleKirimPenolakan = async () => {
                   </button>
                 </>
               )}
-
               {/* ================= AKSI DITOLAK ================= */}
               {row.status === "ditolak" && (
                 <>
@@ -458,18 +455,18 @@ const handleKirimPenolakan = async () => {
   return (
     <>
       {/* ================= HEADER HALAMAN ================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight">Surat & Administrasi</h1>
-          {counts.pending > 0 && <span className="bg-red-100 text-red-700 text-xs font-extrabold px-2.5 py-1 rounded-full animate-pulse">{counts.pending} Pending</span>}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-slate-200  mb-6">
+        <div>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Administrasi Surat</h1>
+          <p className="text-sm text-slate-500 mt-1">Kelola permohonan surat masuk dan status dokumen warga.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/dashboard/surat/request" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition shadow-sm">
+          <Link href="/dashboard/surat/request" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-sm text-sm font-medium transition shadow-sm flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Request Surat
+            Buat Surat
           </Link>
 
-          <Link href="/dashboard/surat/arsip" className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition shadow-sm">
+          <Link href="/dashboard/surat/arsip" className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2 rounded-sm text-sm font-semibold flex items-center gap-2 transition shadow-sm">
             <Archive className="w-4 h-4 text-slate-400" />
             Lihat Arsip
           </Link>

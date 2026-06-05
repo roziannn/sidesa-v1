@@ -23,11 +23,11 @@ export default function DataTable<T>({ columns, data, isLoading = false, onEdit,
   const hasActions = !!onEdit || !!onDelete || !!onView;
 
   return (
-    <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="w-full bg-white border border-slate-200 shadow-sm overflow-hidden rounded-md">
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left text-sm border-collapse">
           <thead>
-            <tr className="bg-[#14532d] text-white font-semibold text-xs uppercase tracking-wider">
+            <tr className="bg-[#0f172a] text-slate-300 font-bold text-[11px] uppercase">
               {columns.map((col, index) => (
                 <th key={index} className="p-4 whitespace-nowrap">
                   {col.label}

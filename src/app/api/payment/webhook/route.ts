@@ -15,13 +15,21 @@ export async function POST(req: Request) {
     }
 
     // 2. VERIFIKASI SIGNATURE
+    // 2. VERIFIKASI SIGNATURE
     const serverKey = process.env.MIDTRANS_SERVER_KEY;
     const inputString = `${order_id}${status_code}${gross_amount}${serverKey}`;
     const signature = crypto.createHash("sha512").update(inputString).digest("hex");
 
-    // Jika signature tidak cocok, jangan proses
+    // LOG INI SANGAT PENTING
+    console.log("DEBUG_SIGNATURE:", {
+      diterima: signature_key,
+      dihitung: signature,
+      match: signature === signature_key,
+    });
+
     if (signature !== signature_key) {
-      console.error("Webhook Signature Mismatch for:", order_id);
+      // JANGAN LANGSUNG RETURN, kita log dulu
+      console.error("Webhook Signature Mismatch! Data tidak akan diupdate.");
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 

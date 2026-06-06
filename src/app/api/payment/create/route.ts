@@ -67,10 +67,11 @@ export async function POST(req: Request) {
       midtrans_order_id: order_id,
       snap_token: transaction.token,
       status: "pending",
+      jumlah: retribusi.jumlah,
     });
-
     if (insertError) {
-      throw new Error("Gagal menyimpan data transaksi ke database");
+      console.error("Supabase Insert Error Detail:", insertError);
+      throw new Error(`Gagal menyimpan ke database: ${insertError.message}`);
     }
 
     // 7. Return response

@@ -7,6 +7,7 @@ import { Plus, Search, AlertCircle, Eye, HandCoins, Send, Filter, CheckCircle2, 
 import { formatRupiah } from "@/lib/format";
 import StatusBadge from "@/components/StatusBadge"; // Pastikan sudah disesuaikan warnanya
 import ConfirmModal from "../ConfirmModal";
+import TombolBayar from "@/components/retribusi/TombolBayar";
 
 export default function RetribusiClient({ initialData }: { initialData: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -357,22 +358,43 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
                       <StatusBadge status={item.displayStatus} />
                     </td>
                     <td className="p-4">
-                      <div className="flex justify-center items-center gap-2">
+                      <div className="flex justify-center items-center">
                         {item.displayStatus === "lunas" ? (
                           <button className="px-3 py-1 border border-slate-300 rounded text-slate-600 hover:bg-slate-100 text-xs">
                             <Eye className="h-3 w-3 inline mr-1" /> Bukti
                           </button>
                         ) : (
                           <>
+                            {/* Tombol Bayar Manual (Rename dari button sebelumnya) */}
                             <button
                               onClick={() => {
                                 setSelectedTagihan(item);
                                 setIsPayModalOpen(true);
                               }}
-                              className={`px-3 py-1 rounded text-white text-xs font-medium ${item.displayStatus === "jatuh_tempo" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
+                              // Samakan padding (px-3 py-1.5) dan font-size (text-xs) agar identik
+                              className={`flex items-center justify-center gap-1.5 px-3 py-1 rounded text-xs font-semibold transition shadow-sm whitespace-nowrap border ${
+                                item.displayStatus === "jatuh_tempo" ? "bg-red-500 hover:bg-red-600 text-white border-red-600" : "bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300"
+                              }`}
                             >
-                              Bayar
+                              Bayar Manual
                             </button>
+
+                            {/* TOMBOL BAYAR ONLINE (Integrasi Komponen Baru) */}
+                            <TombolBayar
+                              retribusiId={String(item.id)}
+                              jumlah={item.jumlah}
+                              namaWarga={item.warga_nama}
+                              onSuccess={() => {
+                                // Refresh halaman agar status berubah jadi lunas setelah sukses
+                                window.location.reload();
+                              }}
+                              onPending={() => {
+                                // Opsional: Refresh atau berikan feedback jika pending
+                                console.log("Pembayaran pending");
+                              }}
+                            />
+
+                            {/* Tombol Mail */}
                             <button className={`px-3 py-1 border rounded text-xs ${item.displayStatus === "jatuh_tempo" ? "border-red-600 text-red-600" : "border-slate-300 text-slate-600"}`}>
                               <Mail className="h-3 w-3" />
                             </button>

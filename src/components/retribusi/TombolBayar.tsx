@@ -79,16 +79,21 @@ export default function TombolBayar({ retribusiId, jumlah, namaWarga, onSuccess,
   };
 
   return (
-    <button onClick={handlePay} disabled={loading} className="flex items-center gap-2 bg-[#1B4332] hover:bg-[#153427] text-white px-6 py-3 rounded-lg font-semibold transition shadow-md disabled:opacity-70 disabled:cursor-not-allowed">
+    <button
+      onClick={handlePay}
+      disabled={loading}
+      // Ganti w-full jadi w-fit, tambahkan padding horizontal yang pas
+      className="w-fit flex items-center justify-center gap-1.5 bg-yellow-500 hover:bg-yellow-600 text-yellow-950 px-3 py-1.5 rounded text-xs font-semibold transition shadow-sm disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap mx-auto"
+    >
       {loading ? (
         <>
-          <Loader2 className="w-5 h-5 animate-spin" />
+          <Loader2 className="w-3 h-3 animate-spin" />
           Memproses...
         </>
       ) : (
         <>
-          <CreditCard className="w-5 h-5" />
-          Bayar Online — {formatRupiah(jumlah)}
+          <CreditCard className="w-3 h-3" />
+          Bayar Online
         </>
       )}
     </button>

@@ -12,3 +12,6 @@ export const formatRupiah = (value: string | number): string => {
 export const parseRupiah = (value: string): number => {
   return Number(value.replace(/[^0-9]/g, ''));
 };
+
+export const formatDate = (date: string) => 
+  new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });

@@ -56,6 +56,9 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
       label: "Jatuh Tempo",
       className: "bg-rose-50 text-rose-700 border-rose-200",
     },
+    berhasil: { label: "Berhasil", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    gagal: { label: "Gagal", className: "bg-rose-50 text-rose-700 border-rose-200" },
+    expired: { label: "Expired", className: "bg-slate-100 text-slate-600 border-slate-200" },
   };
 
   // Ambil config berdasarkan status aktif. Jika tidak terdaftar, gunakan fallback default (abu-abu)

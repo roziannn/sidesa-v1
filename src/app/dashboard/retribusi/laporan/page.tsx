@@ -1,0 +1,84 @@
+// app/(dashboard)/retribusi/laporan/page.tsx
+import React, { Suspense } from 'react'; 
+import DataTable, { Column } from '@/components/DataTable';
+import { formatRupiah } from '@/lib/format';
+import { FileSpreadsheet, FileText } from 'lucide-react';
+import TopCitizensTable from '@/components/retribusi/TopWargaTable'; 
+
+export default async function LaporanPage() {
+  const dataRekap = [
+    { bulan: "Maret 2026", tagihan: 5000000, lunas: 4500000, tunggakan: 500000, persen: "90%" },
+  ];
+
+  const columns: Column<any>[] = [
+    { label: "Bulan", key: "bulan" },
+    { label: "Total Tagihan", key: "tagihan", render: (val) => formatRupiah(val as number) },
+    { label: "Total Lunas", key: "lunas", render: (val) => formatRupiah(val as number) },
+    { label: "Tunggakan", key: "tunggakan", render: (val) => formatRupiah(val as number) },
+    { label: "% Lunas", key: "persen" },
+  ];
+  return (
+    <div className="p-6 space-y-8 bg-gray-50 min-h-screen">
+      {/* HEADER & EXPORT BUTTONS */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Laporan Keuangan Retribusi</h1>
+          <p className="text-gray-500 text-sm">Analisis performa penagihan dan pemasukan warga.</p>
+        </div>
+        <div className="flex gap-2">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 text-gray-700 shadow-sm transition-all">
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            Export Excel
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium hover:bg-blue-700 text-white shadow-md transition-all">
+            <FileText className="w-4 h-4" />
+            Export Laporan PDF
+          </button>
+        </div>
+      </div>
+
+      {/* SECTION 1 & 2: CHARTS */}
+      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Tren Pemasukan (12 Bulan Terakhir)</h3>
+          <div className="h-[300px] w-full">
+            <Suspense fallback={<div className="h-full w-full bg-gray-100 animate-pulse rounded-lg" />}>
+              <IncomeTrendSection />
+            </Suspense>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Proporsi Jenis Retribusi</h3>
+          <div className="h-[300px] w-full">
+            <Suspense fallback={<div className="h-full w-full bg-gray-100 animate-pulse rounded-lg" />}>
+              <LevyBreakdownSection />
+            </Suspense>
+          </div>
+        </div>
+      </div> */}
+
+      {/* SECTION 3: REKAP BULANAN */}
+      {/* <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-4 border-b bg-gray-50/50">
+          <h3 className="text-sm font-semibold text-gray-700">Rekapitulasi Penagihan Bulanan</h3>
+        </div>
+        <Suspense fallback={<div className="p-8 text-center text-gray-500">Memuat tabel rekap...</div>}>
+          <MonthlySummaryTable />
+        </Suspense>
+      </div> */}
+
+      {/* SECTION 4: TOP 10 WARGA */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-4 border-b bg-amber-50/50">
+          <h3 className="text-sm font-semibold text-amber-900 flex items-center gap-2">
+            ⭐ Top 10 Warga Paling Tepat Bayar
+          </h3>
+        </div>
+        <Suspense fallback={<div className="p-8 text-center text-gray-500">Memuat data apresiasi...</div>}>
+          <TopCitizensTable />
+        </Suspense>
+      </div>
+    </div>
+  );
+}

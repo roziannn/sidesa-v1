@@ -4,8 +4,12 @@ import DataTable, { Column } from '@/components/DataTable';
 import { formatRupiah } from '@/lib/format';
 import { FileSpreadsheet, FileText } from 'lucide-react';
 import TopCitizensTable from '@/components/retribusi/TopWargaTable'; 
+import RekapTableClient from '@components/retribusi/Chart/RekapTableChart';
+import IncomeTrendSection from '@components/retribusi/Chart/IncomeTrandChart';
+import LevyBreakdownSection from '@components/retribusi/Chart/LevyBreakdownChart';
 
 export default async function LaporanPage() {
+  // Contoh data rekap (biasanya hasil query ke DB)
   const dataRekap = [
     { bulan: "Maret 2026", tagihan: 5000000, lunas: 4500000, tunggakan: 500000, persen: "90%" },
   ];
@@ -38,7 +42,7 @@ export default async function LaporanPage() {
       </div>
 
       {/* SECTION 1 & 2: CHARTS */}
-      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-700 mb-4">Tren Pemasukan (12 Bulan Terakhir)</h3>
           <div className="h-[300px] w-full">
@@ -56,24 +60,22 @@ export default async function LaporanPage() {
             </Suspense>
           </div>
         </div>
-      </div> */}
+      </div>
 
       {/* SECTION 3: REKAP BULANAN */}
-      {/* <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-4 border-b bg-gray-50/50">
           <h3 className="text-sm font-semibold text-gray-700">Rekapitulasi Penagihan Bulanan</h3>
         </div>
         <Suspense fallback={<div className="p-8 text-center text-gray-500">Memuat tabel rekap...</div>}>
-          <MonthlySummaryTable />
+          <RekapTableClient/>
         </Suspense>
-      </div> */}
+      </div>
 
       {/* SECTION 4: TOP 10 WARGA */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b bg-amber-50/50">
-          <h3 className="text-sm font-semibold text-amber-900 flex items-center gap-2">
-            ⭐ Top 10 Warga Paling Tepat Bayar
-          </h3>
+        <div className="p-4 border-b bg-gray-50/50">
+          <h3 className="text-sm font-semibold text-gray-700">Top 10 Warga Paling Tepat Bayar</h3>
         </div>
         <Suspense fallback={<div className="p-8 text-center text-gray-500">Memuat data apresiasi...</div>}>
           <TopCitizensTable />

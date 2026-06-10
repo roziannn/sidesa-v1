@@ -30,6 +30,7 @@ export default function DashboardLayoutClient({ children, userProfile }: Dashboa
     { name: "Data Kegiatan", href: "/dashboard/kegiatan", icon: Calendar },
     { name: "Bantuan Sosial", href: "/dashboard/bansos", icon: HandHeart },
     { name: "Surat Administrasi", href: "/dashboard/surat", icon: FileText },
+    { name: "Pengaduan", href: "/dashboard/pengaduan", icon: FileWarning },
 
     {
       name: "Retribusi",
@@ -164,8 +165,8 @@ export default function DashboardLayoutClient({ children, userProfile }: Dashboa
         </nav>
 
         {/* Bottom Info */}
-        <div className="p-4 border-t border-[#1e293b]">
-          <div className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-2">Versi Sistem</div>
+        <div className="p-4 border-[#1e293b]">
+          <div className="text-[10px] text-slate-500 uppercase font-semibold mb-2">Versi Sistem</div>
           <div className="text-slate-400 text-xs font-mono">v.2026.06.05</div>
         </div>
       </aside>
@@ -234,15 +235,20 @@ export default function DashboardLayoutClient({ children, userProfile }: Dashboa
               <NotificationBell />
             </div>
 
-            {/* Profil Pengguna - Gaya Minimalis */}
-            <div className="flex items-center gap-3 pl-5 border-l border-slate-200">
+           {/* Profil Pengguna */}
+            <Link href="/dashboard/profile" className="flex items-center gap-3 pl-5 border-l border-slate-200 hover:opacity-80 transition-opacity">
               <div className="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center border border-slate-200 text-slate-500">
                 <User className="w-4 h-4" />
               </div>
               <div className="text-right hidden sm:block">
-                <p className="text-[13px] font-bold text-slate-800 leading-tight">{userProfile?.nama_lengkap || "Petugas Desa"}</p>
+                <p className="text-[13px] font-bold text-slate-800 leading-tight">
+                  {userProfile?.nama_lengkap || "Petugas Desa"}
+                </p>
+                <p className="text-[10px] text-slate-400 uppercase font-medium">
+                  {userProfile?.role || "Petugas"}
+                </p>
               </div>
-            </div>
+            </Link>
 
             {/* Logout Button */}
             <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all duration-200" title="Keluar dari sistem">

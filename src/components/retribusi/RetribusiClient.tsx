@@ -3,11 +3,12 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Plus, Search, AlertCircle, Eye, HandCoins, Send, Filter, CheckCircle2, FileText, Clock, X, Mail } from "lucide-react";
+import { Plus, Search, AlertCircle, Eye, HandCoins, Send, Filter, CheckCircle2, FileText, Clock, X, Mail, CoinsIcon } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
 import StatusBadge from "@/components/StatusBadge"; // Pastikan sudah disesuaikan warnanya
 import ConfirmModal from "../ConfirmModal";
 import TombolBayar from "@/components/retribusi/TombolBayar";
+import DataTable, { Column } from "@/components/DataTable";
 
 export default function RetribusiClient({ initialData }: { initialData: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -167,13 +168,12 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
     setIsSaving(true);
     try {
       const res = await fetch("/api/retribusi/create", {
-        // Sesuaikan path route API Anda
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          warga_id: selectedWarga.id, // ID dari hasil pencarian
+          warga_id: selectedWarga.id, 
           jenis: jenis,
-          jumlah: parseInt(jumlah.replace(/[^0-9]/g, "")), // Bersihkan format "Rp 1.000" jadi 1000
+          jumlah: parseInt(jumlah.replace(/[^0-9]/g, "")), 
           jatuh_tempo: jatuhTempo,
         }),
       });
@@ -214,6 +214,70 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
       setIsPaying(false);
     }
   };
+
+  const columns: Column<any>[] = [
+    {
+  label: <input type="checkbox" onChange={toggleSelectAll} checked={selectedIds.length === filteredData.length && filteredData.length > 0} />,
+  key: "checkbox",
+  render: (_, row: any) => (
+    <input 
+      type="checkbox" 
+      checked={selectedIds.includes(row.id)} 
+      onChange={() => setSelectedIds((prev) => (prev.includes(row.id) ? prev.filter((id) => id !== row.id) : [...prev, row.id]))} 
+    />
+  )
+},
+  { label: "NAMA WARGA", key: "warga_nama" },
+  { label: "RT/RW", key: "rt", render: (_, row) => `RT ${row.rt}/RW ${row.rw}` },
+  { label: "JENIS", key: "jenis" },
+  { label: "JUMLAH", key: "jumlah", render: (val) => formatRupiah(val as number) },
+  { label: "JATUH TEMPO", key: "jatuh_tempo", render: (val) => new Date(val as string).toLocaleDateString("id-ID") },
+  { 
+    label: "STATUS", 
+    key: "displayStatus", 
+    render: (val) => <StatusBadge status={val as any} /> 
+  },
+ {
+  label: "AKSI",
+  key: "aksi",
+  render: (_, item: any) => (
+    <div className="flex justify-start items-center gap-1.5 flex-nowrap">
+      {item.displayStatus === "lunas" ? (
+        <button className="flex items-center justify-center h-[28px] px-3 border border-slate-300 rounded text-slate-600 hover:bg-slate-100 text-xs font-medium transition-all">
+          <Eye className="h-3 w-3 mr-1.5" /> Bukti
+        </button>
+      ) : (
+        <>
+          <button
+            onClick={() => {
+              setSelectedTagihan(item);
+              setIsPayModalOpen(true);
+            }}
+            className={`flex items-center justify-center h-[30px] px-3 rounded text-xs font-semibold border transition-all shadow-sm ${
+              item.displayStatus === "jatuh_tempo" 
+                ? "bg-red-500 hover:bg-red-600 text-white border-red-600" 
+                : "bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300"
+            }`}
+          >
+          <CoinsIcon className="w-3 h-3 me-1"/>  Bayar Manual
+          </button>
+          
+          {/* Pastikan TombolBayar di dalam memiliki height h-[30px] dan font-size text-xs */}
+          <div className="h-[30px]">
+            <TombolBayar
+              retribusiId={String(item.id)}
+              jumlah={item.jumlah}
+              namaWarga={item.warga_nama}
+              onSuccess={() => window.location.reload()}
+              onPending={() => window.location.reload()}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  ),
+},
+];
 
   return (
     <div className="space-y-6">
@@ -295,12 +359,15 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
           />
         </div>
 
-        {/* Bagian Kanan: Reminder & Search (Sejajar) */}
         <div className="flex items-center gap-3">
-          <button disabled={selectedIds.length === 0} onClick={() => setIsReminderModalOpen(true)} className="flex items-center gap-2 bg-blue-600 px-4 py-2 rounded-lg text-white text-sm font-semibold disabled:opacity-50 hover:bg-blue-700">
-            <Send className="h-4 w-4" /> Kirim Reminder ({selectedIds.length})
+          <button 
+            disabled={selectedIds.length === 0} 
+            onClick={() => setIsReminderModalOpen(true)} 
+            className="flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-lg text-white text-sm font-semibold disabled:opacity-50 hover:bg-slate-800 transition-colors"
+          >
+            <Send className="h-4 w-4" /> 
+            Kirim Reminder ({selectedIds.length})
           </button>
-
           <div className="relative">
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
             <input className="pl-9 pr-4 py-2 border rounded-md text-sm w-64 outline-none focus:border-[#1B4332]" placeholder="Cari nama warga..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
@@ -309,113 +376,13 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
       </div>
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <table className="w-full text-sm">
-          <thead className="bg-[#1B4332] text-white">
-            <tr>
-              <th className="p-4 w-10 text-center">
-                <input type="checkbox" onChange={toggleSelectAll} checked={selectedIds.length === filteredData.length && filteredData.length > 0} />
-              </th>
-              <th className="p-4 text-left">NAMA WARGA</th>
-              <th className="p-4 text-left">RT/RW</th>
-              <th className="p-4 text-left">JENIS</th>
-              <th className="p-4 text-left">JUMLAH</th>
-              <th className="p-4 text-left">JATUH TEMPO</th>
-              <th className="p-4 text-left">STATUS</th>
-              <th className="p-4 text-center">AKSI</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {filteredData.length > 0 ? (
-              filteredData.map((item) => {
-                const tglTempo = new Date(item.jatuh_tempo);
-                const selisihHari = Math.ceil((tglTempo.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-                const hampir = item.displayStatus === "belum_bayar" && selisihHari >= 0 && selisihHari < 3;
-
-                const rowClass = item.displayStatus === "jatuh_tempo" ? "bg-red-50" : hampir ? "bg-yellow-50" : "";
-
-                return (
-                  <tr key={item.id} className={`${rowClass} transition-colors hover:bg-slate-50`}>
-                    <td className="p-4 text-center">
-                      <input type="checkbox" checked={selectedIds.includes(item.id)} onChange={() => setSelectedIds((prev) => (prev.includes(item.id) ? prev.filter((id) => id !== item.id) : [...prev, item.id]))} />
-                    </td>
-                    <td className="p-4 font-medium text-slate-800">
-                      <div className="flex items-center gap-2">
-                        {item.displayStatus === "jatuh_tempo" && (
-                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 flex-shrink-0">
-                            <AlertCircle className="h-4 w-4" />
-                          </div>
-                        )}
-                        {item.warga_nama}
-                      </div>
-                    </td>
-                    <td className="p-4 text-slate-600">
-                      RT {item.rt}/RW {item.rw}
-                    </td>
-                    <td className="p-4 text-slate-600">{item.jenis}</td>
-                    <td className="p-4 font-semibold text-slate-800">{formatRupiah(item.jumlah)}</td>
-                    <td className="p-4 text-slate-600 whitespace-nowrap">{new Date(item.jatuh_tempo).toLocaleDateString("id-ID")}</td>
-                    <td className="p-4">
-                      <StatusBadge status={item.displayStatus} />
-                    </td>
-                    <td className="p-4">
-                      <div className="flex justify-center items-center">
-                        {item.displayStatus === "lunas" ? (
-                          <button className="px-3 py-1 border border-slate-300 rounded text-slate-600 hover:bg-slate-100 text-xs">
-                            <Eye className="h-3 w-3 inline mr-1" /> Bukti
-                          </button>
-                        ) : (
-                          <>
-                            {/* Tombol Bayar Manual (Rename dari button sebelumnya) */}
-                            <button
-                              onClick={() => {
-                                setSelectedTagihan(item);
-                                setIsPayModalOpen(true);
-                              }}
-                              // Samakan padding (px-3 py-1.5) dan font-size (text-xs) agar identik
-                              className={`flex items-center justify-center gap-1.5 px-3 py-1 rounded text-xs font-semibold transition shadow-sm whitespace-nowrap border ${
-                                item.displayStatus === "jatuh_tempo" ? "bg-red-500 hover:bg-red-600 text-white border-red-600" : "bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300"
-                              }`}
-                            >
-                              Bayar Manual
-                            </button>
-
-                            {/* TOMBOL BAYAR ONLINE (Integrasi Komponen Baru) */}
-                            <TombolBayar
-                              retribusiId={String(item.id)}
-                              jumlah={item.jumlah}
-                              namaWarga={item.warga_nama}
-                              onSuccess={() => {
-                                // Refresh halaman agar status berubah jadi lunas setelah sukses
-                                window.location.reload();
-                              }}
-                              onPending={() => {
-                                // Opsional: Refresh atau berikan feedback jika pending
-                                console.log("Pembayaran pending");
-                              }}
-                            />
-
-                            {/* Tombol Mail */}
-                            <button className={`px-3 py-1 border rounded text-xs ${item.displayStatus === "jatuh_tempo" ? "border-red-600 text-red-600" : "border-slate-300 text-slate-600"}`}>
-                              <Mail className="h-3 w-3" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan={8} className="p-8 text-center text-slate-500">
-                  Tidak ada data ditemukan.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <DataTable 
+          columns={columns} 
+          data={filteredData.map(item => ({
+              ...item,
+          }))} 
+        />
       </div>
-
       <ConfirmModal
         isOpen={isPayModalOpen}
         title="Konfirmasi Pembayaran"

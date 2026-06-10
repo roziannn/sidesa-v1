@@ -6,7 +6,7 @@ import { Eye, Pencil, Trash2, Database } from "lucide-react";
 // Properti render sekarang mendukung argumen ketiga (index) secara opsional
 export interface Column<T> {
   key: keyof T | string;
-  label: string;
+  label: React.ReactNode;
   render?: (value: unknown, row: T, index: number) => React.ReactNode;
 }
 

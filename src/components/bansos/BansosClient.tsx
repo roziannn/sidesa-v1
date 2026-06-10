@@ -3,11 +3,11 @@
 
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, CheckCircle, RotateCcw, Trash2, Pencil, Users, Layers, MapPin, ShieldCheck, Clock, CheckSquare, Square, Loader2 } from "lucide-react";
+import { Search, Plus, CheckCircle, RotateCcw, Trash2, Pencil, Users, Layers, MapPin, ShieldCheck, Clock, CheckSquare, Square, Loader2, ChevronLeft } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import ConfirmModal from "@/components/ConfirmModal";
 import FormPenerimaBansos from "@/components/bansos/FormPenerimaBansos";
-import FormProgram from "@/components/bansos/FormPage"; // 📁 Mengintegrasikan Form Master Program Baru
+import FormProgram from "@/components/bansos/FormPage"; 
 import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 
@@ -232,14 +232,14 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
         );
       },
     },
-    {
-      key: "id",
-      label: "No",
-      render: (_, row) => {
-        const index = filteredData.findIndex((item) => item.id === row.id);
-        return <span className="text-slate-400 font-medium">{index + 1}</span>;
-      },
-    },
+    // {
+    //   key: "id",
+    //   label: "No",
+    //   render: (_, row) => {
+    //     const index = filteredData.findIndex((item) => item.id === row.id);
+    //     return <span className="text-slate-400 font-medium">{index + 1}</span>;
+    //   },
+    // },
     {
       key: "nama_warga",
       label: "Nama Penerima (Warga)",
@@ -263,13 +263,25 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
     },
     { key: "periode", label: "Periode" },
     {
-      key: "status",
-      label: "Status",
-      render: (val) => {
-        const isSelesai = val === "tersalurkan";
-        return <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${isSelesai ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>{String(val)}</span>;
-      },
+    key: "status",
+    label: "Status",
+    render: (val) => {
+      const statusStr = String(val);
+      const isSelesai = statusStr === "tersalurkan";
+      
+      const statusFormatted = statusStr.charAt(0).toUpperCase() + statusStr.slice(1);
+
+      return (
+        <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${
+          isSelesai 
+            ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+            : "bg-amber-50 text-amber-700 border-amber-200"
+        }`}>
+          {statusFormatted}
+        </span>
+      );
     },
+  },
     {
       key: "aksi_kustom",
       label: "Aksi Penyaluran",
@@ -302,7 +314,6 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
 
   return (
     <div className="space-y-6">
-      {/* CARD AGREGASI ATAS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Program Aktif", value: totalProgramAktif, icon: Layers, color: "text-emerald-600", bg: "bg-emerald-50" },
@@ -315,39 +326,38 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
               <stat.icon className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</p>
-              <p className="text-2xl font-extrabold text-slate-900">{stat.value}</p>
+              {/* setup card style */}
+              <p className="text-[12px] font-semibold text-slate-500 uppercase ">{stat.label}</p>
+              <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* CATALOG CARD SECTION */}
-      <div className="space-y-3 pt-2">
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-emerald-700" />
-            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Katalog Alokasi Program</h3>
+            <h3 className="text-sm font-bold text-slate-800 uppercase">Katalog Alokasi Program</h3>
           </div>
-          {/* ACTION BUTTON TAMBAH MASTER PROGRAM */}
           <button
             onClick={() => {
-              setSelectedProgramData(null); // Mode Kosong (Tambah)
-              setIsProgramModalOpen(true);
+              setSelectedDefaultProgram(filterProgram !== "Semua Program" ? filterProgram : undefined);
+              setIsAddModalOpen(true);
             }}
-            className="inline-flex items-center gap-1.5 bg-[#14532d] hover:bg-[#166534] text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm cursor-pointer transition"
+            className="md:mt-4 inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition h-9 self-end md:self-auto cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" /> Tambah Program
+            <Plus className="w-4 h-4" /> Tambah Program
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {daftarProgram.map((prog) => (
             <div key={prog.nama} className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition">
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
-                  <h4 className="font-extrabold text-slate-900 text-sm tracking-tight leading-snug line-clamp-2 uppercase">{prog.nama}</h4>
-                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider bg-emerald-50 text-emerald-700">Aktif</span>
+                  <h4 className="font-bold text-slate-900 text-sm leading-snug line-clamp-2 uppercase">{prog.nama}</h4>
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full uppercase  bg-emerald-50 text-emerald-700">Aktif</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500 pt-1">
                   <Users className="w-4 h-4 text-slate-400" />
@@ -357,7 +367,7 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
                 </div>
                 <p className="text-[11px] text-slate-400">Periode Berjalan: {prog.periode}</p>
               </div>
-              <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-4">
+              <div className="flex items-center justify-between mt-4">
                 <button
                   onClick={() => {
                     setFilterProgram(prog.nama);
@@ -365,12 +375,10 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
                   }}
                   className="text-xs font-bold text-emerald-700 hover:text-emerald-900 inline-flex items-center gap-1 cursor-pointer"
                 >
-                  Lihat Penerima →
+                  Lihat Penerima <ChevronLeft className="w-3.5 h-3.5 rotate-180" />
                 </button>
-                {/* ACTION BUTTON EDIT MASTER PROGRAM */}
                 <button
                   onClick={async () => {
-                    // Cari data pendukung default bantuan dari baris data yang ada atau default
                     const matchedItem = initialData.find((d) => d.nama_program === prog.nama);
                     setSelectedProgramData({
                       nama_program: prog.nama,
@@ -390,8 +398,7 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
         </div>
       </div>
 
-      {/* TABEL AREA SECTION & DYNAMIC BULK ACTION FLOAT BAR */}
-      <div id="tabel-penerima-section" className="space-y-4 pt-2 border-t border-slate-200 relative">
+      <div id="tabel-penerima-section" className="space-y-4 relative">
         {selectedIds.length > 0 && (
           <div className="bg-slate-900 text-white p-3.5 rounded-xl flex items-center justify-between shadow-xl border border-slate-800 z-20">
             <div className="flex items-center gap-3">
@@ -425,11 +432,10 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
           </div>
         )}
 
-        {/* CONTROLLER FILTER SEARCH */}
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <div className="flex flex-col gap-1">
-              <span className="font-semibold text-slate-400 text-[10px] uppercase">Program Kerja</span>
+              <span className="font-semibold text-slate-400 text-[12px]">Program Kerja</span>
               <select
                 value={filterProgram}
                 onChange={(e) => {
@@ -447,7 +453,7 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="font-semibold text-slate-400 text-[10px] uppercase">Status Cair</span>
+              <span className="font-semibold text-slate-400 text-[12px]">Status Cair</span>
               <select
                 value={filterStatus}
                 onChange={(e) => {
@@ -462,7 +468,7 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
               </select>
             </div>
             <div className="flex flex-col gap-1 w-full sm:w-auto sm:min-w-[240px]">
-              <span className="font-semibold text-slate-400 text-[10px] uppercase">Cari Nama Penerima</span>
+              <span className="font-semibold text-slate-400 text-[12px]">Cari Nama Penerima</span>
               <div className="relative">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
                 <input

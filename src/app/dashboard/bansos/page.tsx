@@ -10,7 +10,6 @@ export const revalidate = 0;
 export default function BansosPage() {
   return (
     <div className="space-y-6">
-      {/* Title Header Menu - Diperbarui agar sejajar dengan tombol laporan */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-2 sm:pb-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#15803d] flex items-center justify-center border border-emerald-100 shadow-sm">

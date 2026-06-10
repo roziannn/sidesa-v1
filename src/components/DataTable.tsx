@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
-import { Eye, Pencil, Trash2, Database } from "lucide-react";
+import React, { useState } from "react";
+import { Eye, Pencil, Trash2, Database, ChevronLeft, ChevronRight } from "lucide-react";
 
-// Properti render sekarang mendukung argumen ketiga (index) secara opsional
 export interface Column<T> {
   key: keyof T | string;
   label: React.ReactNode;
@@ -21,86 +20,66 @@ interface DataTableProps<T> {
 
 export default function DataTable<T>({ columns, data, isLoading = false, onEdit, onDelete, onView }: DataTableProps<T>) {
   const hasActions = !!onEdit || !!onDelete || !!onView;
+  
+  // State Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
+  
+  // Logika Slicing Data
+  const totalPages = Math.ceil(data.length / rowsPerPage);
+  const paginatedData = data.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   return (
-    <div className="w-full bg-white border border-slate-200 shadow-sm overflow-hidden rounded-md">
+    <div className="w-full bg-white shadow-sm overflow-hidden rounded-md">
       <div className="w-full overflow-x-auto">
-        <table className="w-full text-left text-sm border-collapse">
+        <table className="w-full text-left text-[13px] border-collapse">
           <thead>
-            <tr className="bg-[#0f172a] text-slate-300 font-bold text-[11px] uppercase">
+            <tr className="bg-[#0f172a] text-slate-300 font-bold text-[10px] uppercase tracking-wider">
               {columns.map((col, index) => (
-                <th key={index} className="p-4 whitespace-nowrap">
-                  {col.label}
-                </th>
+                <th key={index} className="px-4 py-4 whitespace-nowrap">{col.label}</th>
               ))}
-              {hasActions && <th className="p-4 text-center whitespace-nowrap">Aksi</th>}
+              {hasActions && <th className="px-4 py-4 text-center whitespace-nowrap">Aksi</th>}
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-slate-200 text-slate-700">
+          <tbody className="divide-y divide-slate-100 text-slate-700">
             {isLoading ? (
-              [...Array(5)].map((_, rowIndex) => (
-                <tr key={rowIndex} className="animate-pulse">
-                  {columns.map((_, colIndex) => (
-                    <td key={colIndex} className="p-4">
-                      <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                    </td>
-                  ))}
-                  {hasActions && (
-                    <td className="p-4 flex justify-center gap-2">
-                      <div className="h-7 w-7 bg-slate-200 rounded-lg"></div>
-                      <div className="h-7 w-7 bg-slate-200 rounded-lg"></div>
-                    </td>
-                  )}
+              [...Array(rowsPerPage)].map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  {columns.map((_, colIndex) => <td key={colIndex} className="px-4 py-3.5"><div className="h-3 bg-slate-100 rounded w-3/4"></div></td>)}
                 </tr>
               ))
-            ) : data.length === 0 ? (
+            ) : paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + (hasActions ? 1 : 0)} className="p-12 text-center text-slate-400">
-                  <div className="flex flex-col items-center justify-center gap-3">
-                    <Database className="w-10 h-10 text-slate-300 stroke-[1.5]" />
+                <td colSpan={columns.length + (hasActions ? 1 : 0)} className="p-10 text-center text-slate-400">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Database className="w-8 h-8 text-slate-200" />
                     <span className="text-xs font-medium">Belum ada data tersedia</span>
                   </div>
                 </td>
               </tr>
             ) : (
-              data.map((row, rowIndex) => (
-                <tr key={rowIndex} className={`transition-colors hover:bg-slate-50/80 ${rowIndex % 2 === 1 ? "bg-slate-50/40" : "bg-white"}`}>
+              paginatedData.map((row, rowIndex) => (
+                <tr key={rowIndex} className="hover:bg-slate-50 transition-colors">
                   {columns.map((col, colIndex) => {
-                    const cellValue =
-                      col.key in (row as object)
-                        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          (row as any)[col.key]
-                        : undefined;
-
+                    const cellValue = col.key in (row as object) ? (row as any)[col.key] : undefined;
                     return (
-                      <td key={colIndex} className="p-4 whitespace-nowrap">
-                        {/* Menyalurkan rowIndex ke dalam fungsi render kolom */}
-                        {col.render ? col.render(cellValue, row, rowIndex) : String(cellValue ?? "-")}
+                      <td key={colIndex} className="px-4 py-3 whitespace-nowrap">
+                       {col.render ? 
+                          col.render(cellValue, row, (currentPage - 1) * rowsPerPage + rowIndex) : 
+                          (typeof cellValue === 'string' ? capitalize(cellValue) : String(cellValue ?? "-"))
+                        }
                       </td>
                     );
                   })}
-
                   {hasActions && (
-                    <td className="p-4 text-center whitespace-nowrap">
-                      <div className="inline-flex items-center justify-center gap-1.5">
-                        {onView && (
-                          <button onClick={() => onView(row)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg border border-transparent hover:border-blue-200 transition-all" title="Lihat Detail">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        )}
-
-                        {onEdit && (
-                          <button onClick={() => onEdit(row)} className="p-1.5 text-[#15803d] hover:bg-emerald-50 rounded-lg border border-transparent hover:border-emerald-200 transition-all" title="Ubah Data">
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                        )}
-
-                        {onDelete && (
-                          <button onClick={() => onDelete(row)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-200 transition-all" title="Hapus Data">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
+                    <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2">
+                        {onView && <button onClick={() => onView(row)} className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-all"><Eye className="w-3.5 h-3.5" /></button>}
+                        {onEdit && <button onClick={() => onEdit(row)} className="p-1 text-[#15803d] hover:bg-emerald-50 rounded transition-all"><Pencil className="w-3.5 h-3.5" /></button>}
+                        {onDelete && <button onClick={() => onDelete(row)} className="p-1 text-red-600 hover:bg-red-50 rounded transition-all"><Trash2 className="w-3.5 h-3.5" /></button>}
                       </div>
                     </td>
                   )}
@@ -110,6 +89,32 @@ export default function DataTable<T>({ columns, data, isLoading = false, onEdit,
           </tbody>
         </table>
       </div>
+
+      {/* FOOTER PAGINATION */}
+      {totalPages > 1 && (
+        <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50">
+          <span className="text-xs text-slate-500">
+            Menampilkan { (currentPage - 1) * rowsPerPage + 1 } - { Math.min(currentPage * rowsPerPage, data.length) } dari {data.length} data
+          </span>
+          <div className="flex items-center gap-1">
+            <button 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+              className="p-1.5 rounded hover:bg-slate-200 disabled:opacity-50"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-xs font-semibold px-2">{currentPage} / {totalPages}</span>
+            <button 
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              className="p-1.5 rounded hover:bg-slate-200 disabled:opacity-50"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

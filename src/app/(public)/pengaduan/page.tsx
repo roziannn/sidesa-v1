@@ -1,25 +1,44 @@
 'use client';
 import { useState } from 'react';
-import { useToast } from "@/hooks/useToast"; 
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useToast } from "@/hooks/useToast";
+
+const formSchema = z.object({
+  nama: z.string().min(1, "Nama wajib diisi"),
+  noTelp: z.string().min(10, "Nomor telepon minimal 10 digit"),
+  alamat: z.string().min(1, "Alamat wajib diisi"),
+  jenis: z.string(),
+  isi: z.string().min(10, "Isi pengaduan minimal 10 karakter"),
+});
 
 export default function FormPengaduan() {
   const [loading, setLoading] = useState(false);
-  const { showToast } = useToast(); 
+  const { showToast } = useToast();
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    resolver: zodResolver(formSchema),
+  });
+
+  async function onSubmit(data: any) {
     setLoading(true);
-
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500)); 
+      await new Promise(resolve => setTimeout(resolve, 1500));
       showToast("success", "Berhasil Terkirim", "Terima kasih, pengaduan Anda telah kami terima.");
-      e.currentTarget.reset();
+      reset();
     } catch (error) {
       showToast("error", "Gagal Mengirim", "Terjadi kesalahan saat mengirim pengaduan.");
     } finally {
       setLoading(false);
     }
   }
+
+  const Label = ({ children }: { children: React.ReactNode }) => (
+    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+      {children} <span className="text-red-500">*</span>
+    </label>
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 flex flex-col items-center">
@@ -28,61 +47,49 @@ export default function FormPengaduan() {
           <h1 className="text-xl font-semibold text-slate-900">Form Pengaduan Masyarakat</h1>
           <p className="text-slate-500 text-sm mt-1">Lengkapi data di bawah ini untuk memproses laporan Anda.</p>
         </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Nama Lengkap */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Lengkap</label>
-              <input required type="text" className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition" />
+            <div>
+              <Label>Nama Lengkap</Label>
+              <input {...register("nama")} className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded text-slate-900 focus:border-slate-900 outline-none" />
+              {errors.nama && <p className="text-red-500 text-[10px] mt-1">{String(errors.nama.message)}</p>}
             </div>
 
-            {/* No Telp */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">No. Telepon/WA</label>
-              <input required type="tel" className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition" />
+            <div>
+              <Label>No. Telepon/WA</Label>
+              <input type="number" {...register("noTelp")} className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded text-slate-900 focus:border-slate-900 outline-none" />
+              {errors.noTelp && <p className="text-red-500 text-[10px] mt-1">{String(errors.noTelp.message)}</p>}
             </div>
           </div>
 
-          {/* Alamat */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Alamat</label>
-            <input required type="text" className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition" />
+          <div>
+            <Label>Alamat</Label>
+            <input {...register("alamat")} className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded text-slate-900 focus:border-slate-900 outline-none" />
+            {errors.alamat && <p className="text-red-500 text-[10px] mt-1">{String(errors.alamat.message)}</p>}
           </div>
 
-          {/* Jenis Pengaduan */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Jenis Pengaduan</label>
-            <select className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition">
+          <div>
+            <Label>Jenis Pengaduan</Label>
+            <select {...register("jenis")} className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded text-slate-900 focus:border-slate-900 outline-none">
               <option value="fasilitas">Fasilitas Umum</option>
               <option value="keamanan">Keamanan</option>
               <option value="kebersihan">Kebersihan</option>
+              <option value="lingkungan">Lingkungan</option>
               <option value="lainnya">Lainnya</option>
             </select>
           </div>
 
-          {/* Isi Pengaduan */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Isi Pengaduan</label>
-            <textarea required rows={5} className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition"></textarea>
+          <div>
+            <Label>Isi Pengaduan</Label>
+            <textarea {...register("isi")} rows={4} className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded text-slate-900 focus:border-slate-900 outline-none"></textarea>
+            {errors.isi && <p className="text-red-500 text-[10px] mt-1">{String(errors.isi.message)}</p>}
           </div>
 
-          <div className="pt-4">
-            <button 
-              disabled={loading}
-              className="w-full bg-blue-700 text-white font-medium py-2.5 rounded hover:bg-blue-800 transition disabled:opacity-50 uppercase tracking-wide text-sm"
-            >
-              {loading ? "Memproses..." : "Kirim Pengaduan"}
-            </button>
-          </div>
+          <button disabled={loading} className="w-full bg-slate-900 text-white font-semibold py-2.5 rounded hover:bg-slate-800 transition disabled:opacity-50 uppercase text-sm">
+            {loading ? "Memproses..." : "Kirim Pengaduan"}
+          </button>
         </form>
-      </div>
-
-      {/* Footer SIDESA */}
-      <div className="mt-8 text-center">
-        <p className="text-slate-400 text-xs font-medium uppercase tracking-widest">
-          SIDESA © {new Date().getFullYear()}
-        </p>
       </div>
     </div>
   );

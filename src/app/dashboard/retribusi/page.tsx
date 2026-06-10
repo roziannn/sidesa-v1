@@ -36,8 +36,7 @@ const formattedData = (retribusi as unknown as RetribusiRaw[])?.map(r => ({
 })) || [];
 
   return (
-    <div className="p-6">
-
+    <div className="space-y-6">
       <RetribusiClient initialData={formattedData} />
     </div>
   );

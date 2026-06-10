@@ -22,8 +22,7 @@ export default async function LaporanPage() {
     { label: "% Lunas", key: "persen" },
   ];
   return (
-    <div className="p-6 space-y-8 bg-gray-50 min-h-screen">
-      {/* HEADER & EXPORT BUTTONS */}
+    <div className="space-y-6 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Laporan Keuangan Retribusi</h1>

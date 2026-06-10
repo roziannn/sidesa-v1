@@ -15,7 +15,7 @@ export default async function ArsipPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       <h1 className="text-2xl font-bold mb-6">Arsip Surat</h1>
       <ArsipClient initialData={arsip || []} />
     </div>

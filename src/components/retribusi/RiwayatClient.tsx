@@ -60,7 +60,7 @@ const columns: Column<any>[] = [
 ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* SUMMARY BAR */}
       <div className="grid grid-cols-4 gap-4">
         {[

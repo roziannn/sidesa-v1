@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { House, Users, HandHeart, Calendar, FileText, Wallet, Menu, X, LogOut, User, FileWarning, Building2, ChevronDown, ChevronRight } from "lucide-react";
+import { House, Users, HandHeart, Calendar, FileText, Wallet, Menu, X, LogOut, User, FileWarning, Building2, ChevronDown, ChevronRight, Activity, ThumbsUp } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -19,7 +19,6 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
     { name: "Data Kegiatan", href: "/dashboard/kegiatan", icon: Calendar },
     { name: "Bantuan Sosial", href: "/dashboard/bansos", icon: HandHeart },
     { name: "Surat Administrasi", href: "/dashboard/surat", icon: FileText },
-    { name: "Pengaduan", href: "/dashboard/pengaduan", icon: FileWarning },
     {
       name: "Retribusi",
       href: "/dashboard/retribusi",
@@ -30,6 +29,9 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
         { name: "Laporan", href: "/dashboard/retribusi/laporan" },
       ],
     },
+    { name: "Pengaduan", href: "/dashboard/pengaduan", icon: FileWarning },
+    { name: "Survey Kepuasan", href: "/dashboard/survey-kepuasan", icon: ThumbsUp },
+    { name: "Audit Trail", href: "/dashboard/audit-trail", icon: Activity },
   ];
 
   // Logic aktif rute yang lebih tangguh
@@ -69,7 +71,7 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
       <div className="space-y-1">
         <button 
           onClick={() => setIsOpen(!isOpen)}
-          className={`flex w-full items-center gap-3 px-4 py-2.5 rounded-r-sm text-[13px] font-medium transition-all 
+          className={`flex w-full items-center gap-3 px-4 py-2.5 rounded-r-sm text-[13px] font-bold transition-all 
             ${isActive(item.href) ? "bg-[#1e293b] text-emerald-400 border-l-4 border-emerald-500" : "text-slate-400 hover:text-white border-l-4 border-transparent"}`}
         >
           <item.icon className="w-4 h-4" />
@@ -98,7 +100,7 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
   return (
     <Link
       href={item.href}
-      className={`flex items-center gap-3 px-4 py-2.5 rounded-r-sm text-[13px] font-medium transition-all 
+      className={`flex items-center gap-3 px-4 py-2.5 rounded-r-sm text-[13px] font-bold transition-all 
         ${isActive(item.href) ? "bg-[#1e293b] text-emerald-400 border-l-4 border-emerald-500" : "text-slate-400 hover:text-white hover:bg-[#1e293b]/50 border-l-4 border-transparent"}`}
     >
       <item.icon className="w-4 h-4" />

@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabase/client";
-import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, List } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, List, Calendar } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 
 type Kegiatan = {
@@ -157,7 +157,15 @@ export default function KegiatanPage() {
     <div className={`space-y-4 ${mode === "kalender" ? "h-[calc(100vh-110px)] flex flex-col" : ""}`}>
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0">
-        <h1 className="text-xl font-bold">Kegiatan Desa</h1>
+       <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#15803d] flex items-center justify-center border border-emerald-100 shadow-sm">
+            <Calendar className="w-5 h-5 stroke-[2.25]" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Manajemen Bantuan Sosial</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Pantau penyaluran dana stimulan, verifikasi data jaring pengaman, serta klasterisasi bansos berkala warga.</p>
+          </div>
+        </div>
 
         <div className="flex items-center gap-2">
           <button onClick={() => setMode("list")} className={`px-3 py-1 rounded-lg text-sm font-semibold border ${mode === "list" ? "bg-emerald-600 text-white border-emerald-600" : "border-slate-300 text-slate-600"}`}>

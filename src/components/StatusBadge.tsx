@@ -59,6 +59,20 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
     berhasil: { label: "Berhasil", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
     gagal: { label: "Gagal", className: "bg-rose-50 text-rose-700 border-rose-200" },
     expired: { label: "Expired", className: "bg-slate-100 text-slate-600 border-slate-200" },
+
+    // Prioritas
+    rendah: {
+      label: "Rendah",
+      className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    },
+    sedang: {
+      label: "Sedang",
+      className: "bg-amber-50 text-amber-700 border-amber-200",
+    },
+    tinggi: {
+      label: "Tinggi",
+      className: "bg-rose-50 text-rose-700 border-rose-200",
+    },
   };
 
   // Ambil config berdasarkan status aktif. Jika tidak terdaftar, gunakan fallback default (abu-abu)

@@ -40,20 +40,37 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
     return pathname.startsWith(href);
   };
 
+  const getBreadcrumbs = () => {
+  const segments = pathname
+    .split('/')
+    .filter(Boolean)
+    .slice(1); // buang "dashboard"
+
+  return segments.map((segment, index) => {
+    const isLast = index === segments.length - 1;
+
+    // UUID atau dynamic route
+    if (
+      isLast &&
+      /^[0-9a-fA-F-]{20,}$/.test(segment)
+    ) {
+      return 'Detail';
+    }
+
+    return segment
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  });
+};
+
   const getPageTitle = () => {
-    const routeMap: Record<string, string> = {
-      "/dashboard": "Dashboard",
-      "/dashboard/keluarga": "Data Keluarga",
-      "/dashboard/kegiatan": "Data Kegiatan",
-      "/dashboard/bansos": "Bantuan Sosial",
-      "/dashboard/bansos/laporan": "Laporan Bansos",
-      "/dashboard/surat": "Surat Administrasi",
-      "/dashboard/pengaduan": "Pengaduan",
-      "/dashboard/retribusi": "Retribusi",
-      "/dashboard/profile": "Profil Pengguna"
-    };
-    return routeMap[pathname] || "Sistem Desa Digital";
-  };
+  const breadcrumbs = getBreadcrumbs();
+
+  return (
+    breadcrumbs[breadcrumbs.length - 1] ||
+    'Dashboard'
+  );
+};
 
   const handleLogout = async () => {
     if (confirm("Keluar dari sistem?")) {
@@ -65,6 +82,7 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
 
   const SidebarItem = ({ item, pathname, isActive }: { item: any; pathname: string; isActive: (href: string) => boolean }) => {
   const [isOpen, setIsOpen] = useState(isActive(item.href)); // Default terbuka jika aktif
+
 
   if (item.children) {
     return (
@@ -131,6 +149,15 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
           />
         ))}
       </nav>
+      <div className="pb-5 px-6">
+        <p className="text-[13px] font-bold text-slate-400">
+          Version v1.0.0
+        </p>
+
+        <p className="text-[12px] text-slate-400 mt-1">
+          © {new Date().getFullYear()} SIDESA
+        </p>
+      </div>
       </aside>
 
       {/* Konten */}
@@ -150,14 +177,23 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
           </div>
         </header>
 
-        <div className="px-6 pt-4 text-xs text-slate-400 flex items-center gap-2">
+        <div className="px-6 pt-4 text-xs text-slate-400 flex items-center gap-2 flex-wrap">
           <span>Dashboard</span>
-          {pathname !== "/dashboard" && (
-            <>
+
+          {getBreadcrumbs().map((crumb, index) => (
+            <React.Fragment key={index}>
               <ChevronRight className="w-3 h-3" />
-              <span className="font-semibold text-slate-700">{getPageTitle()}</span>
-            </>
-          )}
+              <span
+                className={
+                  index === getBreadcrumbs().length - 1
+                    ? 'font-semibold text-slate-700'
+                    : ''
+                }
+              >
+                {crumb}
+              </span>
+            </React.Fragment>
+          ))}
         </div>
 
         <main className="flex-1 p-6 overflow-y-auto">{children}</main>

@@ -1,47 +1,19 @@
+import { createClient } from '@/lib/supabase/server';
 import PengaduanClient from '@components/pengaduan/PengaduanClient';
 import { FilesIcon, FileWarning } from 'lucide-react';
 
 async function getData() {
-  return [
-   {
-  id: "1",
-  nama: "Budi Santoso",
-  jenis: "Kebersihan",
-  isi: "Sampah tidak diangkut 2 hari",
-  tanggal: "2026-06-10",
-  updatedAt: new Date("2026-06-10"),
-  petugasPenanganan: "-",
-  catatanPetugas: "-",
-  prioritas: "Sedang" as const,
-  status: "pending" as const,
-},
-{
-  id: "2",
-  nama: "Siti Rahma",
-  jenis: "Fasilitas",
-  isi: "Lampu jalan mati",
-  tanggal: "2026-06-08",
-  updatedAt: new Date("2026-06-11"),
-  petugasPenanganan: "Admin RT",
-  catatanPetugas: "Pengaduan sedang diproses.",
-  prioritas: "Tinggi" as const,
-  status: "diproses" as const,
-},
-{
-  id: "3",
-  nama: "Agus Jaya",
-  jenis: "Keamanan",
-  isi: "Gerbang rusak",
-  tanggal: "2026-06-05",
-  updatedAt: new Date("2026-06-09"),
-  petugasPenanganan: "Admin RW",
-  catatanPetugas: "Pengaduan telah selesai.",
-  prioritas: "Rendah" as const,
-  status: "selesai" as const,
-},
-  ];
-}
+  const supabase = await createClient();
 
+  const { data, error } = await supabase
+    .from('pengaduan')
+    .select('*');
+
+  console.log('ERROR:', error);
+  console.log('DATA:', data);
+
+  return data ?? [];
+}
 export default async function PengaduanPage() {
   const data = await getData();
 

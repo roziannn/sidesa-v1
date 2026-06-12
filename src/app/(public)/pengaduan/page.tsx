@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from "@/hooks/useToast";
+import { supabaseClient } from '@/lib/supabase/client';
 
 const formSchema = z.object({
   nama: z.string().min(1, "Nama wajib diisi"),
@@ -21,18 +22,52 @@ export default function FormPengaduan() {
     resolver: zodResolver(formSchema),
   });
 
-  async function onSubmit(data: any) {
-    setLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      showToast("success", "Berhasil Terkirim", "Terima kasih, pengaduan Anda telah kami terima.");
-      reset();
-    } catch (error) {
-      showToast("error", "Gagal Mengirim", "Terjadi kesalahan saat mengirim pengaduan.");
-    } finally {
-      setLoading(false);
+ async function onSubmit(data: any) {
+  setLoading(true);
+
+  try {
+    const { error } = await supabaseClient
+      .from('pengaduan')
+      .insert({
+        nama_warga: data.nama,
+        jenis: data.jenis,
+        isi_pengaduan: data.isi,
+        tanggal: new Date()
+          .toISOString()
+          .split('T')[0],
+
+        prioritas: 'Sedang',
+
+        status: 'Menunggu',
+
+        petugas: null,
+        catatan_petugas: null,
+      });
+
+    if (error) {
+      throw error;
     }
+
+    showToast(
+      'success',
+      'Berhasil Terkirim',
+      'Terima kasih, pengaduan Anda telah kami terima.'
+    );
+
+    reset();
+  } catch (error: any) {
+    console.error(error);
+
+    showToast(
+      'error',
+      'Gagal Mengirim',
+      error.message ||
+        'Terjadi kesalahan saat mengirim pengaduan.'
+    );
+  } finally {
+    setLoading(false);
   }
+}
 
   const Label = ({ children }: { children: React.ReactNode }) => (
     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">

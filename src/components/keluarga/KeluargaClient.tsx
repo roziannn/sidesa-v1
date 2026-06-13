@@ -7,6 +7,7 @@ import Link from "next/link";
 import DataTable, { Column } from "@/components/DataTable";
 import ConfirmModal from "@/components/ConfirmModal";
 import { supabaseClient } from "@/lib/supabase/client";
+import Button from "@components/ui/Button";
 
 interface KeluargaData {
   id: string;
@@ -98,10 +99,14 @@ export default function KeluargaClient({ initialData, totalKK }: KeluargaClientP
         </div>
         <Link
           href="/dashboard/keluarga/tambah"
-          className="inline-flex items-center justify-center gap-2 bg-[#15803d] hover:bg-[#166534] text-white font-semibold text-sm py-2.5 px-4 rounded-lg transition shadow-sm"
         >
-          <Plus className="w-4 h-4" />
-          Tambah KK Baru
+          <Button
+          leftIcon={
+            <Plus className="h-4 w-4" />
+          }
+        >
+          Tambah Data
+        </Button>
         </Link>
       </div>
 

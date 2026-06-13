@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Search, Users, CheckCircle2, Clock, CircleDollarSign, ChartBarBig } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import LaporanTableClient from "@/components/bansos/LaporanClient";
+import { formatDate } from "@/lib/format";
 
 interface LaporanPageProps {
   searchParams: Promise<{
@@ -71,7 +72,7 @@ export default async function LaporanBansosPage({ searchParams }: LaporanPagePro
         </span>
       ) 
     },
-    { label: "Tanggal Cair", key: "created_at", render: (val, row) => row.status === "tersalurkan" ? new Date(val as string).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }) : "-" }
+    { label: "Tanggal Cair", key: "created_at", render: (val, row) => row.status === "tersalurkan" ? formatDate(new Date()) : "-" }
   ];
 
   return (

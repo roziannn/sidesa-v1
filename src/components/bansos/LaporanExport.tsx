@@ -6,6 +6,7 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { Download, Printer } from "lucide-react";
+import { formatDate } from "@/lib/format";
 
 interface ExportButtonsProps {
   records: any[];
@@ -37,7 +38,7 @@ export default function ExportButtons({ records, selectedProgram, namaBulanLabel
       `RT ${row.profiles?.rt || "00"} / RW ${row.profiles?.rw || "00"}`,
       `Rp ${Number(row.jumlah_bantuan || 0).toLocaleString("id-ID")}`,
       row.status,
-      row.status === "Tersalurkan" ? new Date(row.created_at).toLocaleDateString("id-ID") : "-",
+      row.status === "Tersalurkan" ? formatDate(new Date()) : "-",
     ]);
 
     autoTable(doc, {
@@ -56,8 +57,8 @@ export default function ExportButtons({ records, selectedProgram, namaBulanLabel
 
     doc.text(`Total Dana Tersalurkan: Rp ${totalDanaTersalurkan.toLocaleString("id-ID")}`, 14, finalY + 10);
 
-    // Area tanda tangan
-    doc.text(`Bekasi, ${new Date().toLocaleDateString("id-ID")}`, 220, finalY + 25);
+    // area tanda tangan
+    doc.text(`Bekasi, ${formatDate(new Date())}`, 220, finalY + 25);
 
     doc.text("Kepala Desa Sukamaju", 220, finalY + 32);
 
@@ -77,7 +78,7 @@ export default function ExportButtons({ records, selectedProgram, namaBulanLabel
       Wilayah: `RT ${row.profiles?.rt || "00"} / RW ${row.profiles?.rw || "00"}`,
       Nominal: row.jumlah_bantuan,
       Status: row.status,
-      "Tanggal Cair": row.status === "Tersalurkan" ? new Date(row.created_at).toLocaleDateString("id-ID") : "-",
+      "Tanggal Cair": row.status === "Tersalurkan" ? formatDate(new Date()) : "-",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);

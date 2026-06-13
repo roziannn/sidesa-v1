@@ -103,7 +103,7 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
               <Link
                 key={child.href}
                 href={child.href}
-                className={`block px-4 py-2 text-[12px] rounded-r-sm transition-colors 
+                className={`block px-4 py-2 text-[12px] font-semibold rounded-r-sm transition-colors 
                   ${pathname === child.href ? "text-emerald-400 bg-[#1e293b]/50 border-l-2 border-emerald-500" : "text-slate-500 hover:text-slate-300 border-l-2 border-transparent"}`}
               >
                 {child.name}

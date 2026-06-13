@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { supabaseClient } from "@/lib/supabase/client";
 import { Trash2, UserPlus, Printer } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
+import { formatDate, formatDayDate } from "@/lib/format";
 
 // Interfaces
 interface Profile {
@@ -178,7 +179,9 @@ export default function DetailKegiatanPage() {
           <div className="grid grid-cols-2 gap-4 mt-6 text-sm">
             <div>
               <p className="text-slate-500">Tanggal</p>
-              <p className="font-semibold">{new Date(kegiatan.tanggal).toLocaleDateString("id-ID", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</p>
+              <p className="font-semibold">
+              {formatDayDate(kegiatan.tanggal)}
+            </p>
             </div>
             <div>
               <p className="text-slate-500">Waktu</p>
@@ -333,7 +336,7 @@ export default function DetailKegiatanPage() {
           <div className="col-span-9 font-medium">: {kegiatan.judul}</div>
 
           <div className="col-span-3 font-bold text-slate-700">Tanggal</div>
-          <div className="col-span-9 font-medium">: {new Date(kegiatan.tanggal).toLocaleDateString("id-ID", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</div>
+          <div className="col-span-9 font-medium">: {formatDate(kegiatan.tanggal)}</div>
 
           <div className="col-span-3 font-bold text-slate-700">Waktu</div>
           <div className="col-span-9 font-medium">

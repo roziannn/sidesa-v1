@@ -6,6 +6,7 @@ import { Eye } from 'lucide-react';
 
 import DataTable, { Column } from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
+import { formatDate } from '@/lib/format';
 
 interface Pengaduan {
   id: string;
@@ -87,6 +88,7 @@ export default function PengaduanClient({
   {
     label: 'Tanggal',
     key: 'tanggal',
+    render: (val) => formatDate(String(val)),
   },
   {
     label: 'Isi Pengaduan',

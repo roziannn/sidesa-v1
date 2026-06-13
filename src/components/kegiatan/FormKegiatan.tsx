@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { Save, Calendar, MapPin, Clock, Users, Info, RefreshCw } from "lucide-react";
+import { formatDate } from "@/lib/format";
 
 interface FormKegiatanProps {
   initialData?: {
@@ -260,7 +261,7 @@ export default function FormKegiatan({ initialData, mode }: FormKegiatanProps) {
         <div className="space-y-4">
           <p className="font-bold text-slate-800 text-lg leading-snug">{judul || "Nama Program"}</p>
           <div className="space-y-2 text-sm text-slate-600">
-            <p>📅 {tanggal ? new Date(tanggal).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }) : "Tanggal belum dipilih"}</p>
+            <p>📅 {tanggal ? formatDate(new Date()) : "Tanggal belum dipilih"}</p>
             <p>
               ⏰ {waktuMulai || "--"} - {waktuSelesai || "--"}
             </p>
@@ -281,7 +282,7 @@ export default function FormKegiatan({ initialData, mode }: FormKegiatanProps) {
               {recurringDates.map((dateStr, index) => (
                 <div key={index} className="flex items-center gap-2">
                   <span className="text-slate-400 text-[10px]">#{index + 1}</span>
-                  <span>{new Date(dateStr).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}</span>
+                  <span>{formatDate(new Date())}</span>
                 </div>
               ))}
             </div>

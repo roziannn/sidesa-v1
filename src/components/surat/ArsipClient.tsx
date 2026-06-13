@@ -6,6 +6,7 @@ import DataTable, { Column } from "@/components/DataTable";
 import { RefreshCw, Eye } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import { useToast } from "@/hooks/useToast";
+import { formatDate } from "@/lib/format";
 
 export default function ArsipClient({ initialData }: { initialData: any[] }) {
   const [data] = useState(initialData);
@@ -72,14 +73,13 @@ export default function ArsipClient({ initialData }: { initialData: any[] }) {
     {
       key: "created_at",
       label: "Tanggal",
-      render: (val) => (val ? new Date(val as string).toLocaleDateString("id-ID") : "-"),
+      render: (val) =>  formatDate(String(val)),
     },
     {
       key: "aksi",
       label: "Aksi",
       render: (_, row) => (
         <div className="flex gap-2">
-          {/* Tombol Proses (Hanya muncul jika status masih pending) */}
           {row.status === "pending" && (
             <button onClick={() => handleUpdateStatus(row.id, "diproses")} className="px-3 py-1 bg-amber-500 text-white text-xs rounded-md hover:bg-amber-600 transition">
               Proses

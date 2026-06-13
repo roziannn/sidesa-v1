@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo } from "react";
 import { Plus, Search, AlertCircle, Eye, HandCoins, Send, Filter, CheckCircle2, FileText, Clock, X, Mail, CoinsIcon } from "lucide-react";
-import { formatRupiah } from "@/lib/format";
+import { formatDate, formatRupiah } from "@/lib/format";
 import StatusBadge from "@/components/StatusBadge"; // Pastikan sudah disesuaikan warnanya
 import ConfirmModal from "../ConfirmModal";
 import TombolBayar from "@/components/retribusi/TombolBayar";
@@ -231,7 +231,7 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
   { label: "RT/RW", key: "rt", render: (_, row) => `RT ${row.rt}/RW ${row.rw}` },
   { label: "JENIS", key: "jenis" },
   { label: "JUMLAH", key: "jumlah", render: (val) => formatRupiah(val as number) },
-  { label: "JATUH TEMPO", key: "jatuh_tempo", render: (val) => new Date(val as string).toLocaleDateString("id-ID") },
+  { label: "JATUH TEMPO", key: "jatuh_tempo", render: (val) => formatDate(String(val)), },
   { 
     label: "STATUS", 
     key: "displayStatus", 
@@ -381,7 +381,7 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
               ...item,
           }))} 
         />
-        
+
       <ConfirmModal
         isOpen={isPayModalOpen}
         title="Konfirmasi Pembayaran"

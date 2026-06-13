@@ -1,6 +1,7 @@
 'use client';
 
 import DataTable, { Column } from '@/components/DataTable';
+import { formatDate } from '@/lib/format';
 import { Star, Trophy } from 'lucide-react';
 
  interface SurveyKepuasan {
@@ -110,10 +111,7 @@ const pelayananTerbaik =
   {
     label: 'Tanggal',
     key: 'created_at',
-    render: (val) =>
-      new Date(String(val)).toLocaleDateString(
-        'id-ID'
-      ),
+    render: (val) => formatDate(String(val)),
   },
 ];
 

@@ -8,6 +8,7 @@ import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import DataTable, { Column } from "@/components/DataTable"; // Sesuaikan path component DataTable kamu
 import { FileText, CheckCircle2, Clock, XCircle, AlertTriangle, Archive, FileCheck, Download, Eye, RefreshCw, AlertCircle } from "lucide-react";
+import { formatDate } from "@/lib/format";
 
 // Interface data lokal
 interface Profile {
@@ -73,32 +74,36 @@ export default function SuratClient({ initialSurat }: ClientProps) {
   }, [listSurat, activeTab]);
 
   // 3. UTILITY FORMAT DATA & TANGGAL
-  const formatTanggalKonteks = (isoString: string) => {
+  const formatTanggalKonteks = (
+  isoString: string
+  ) => {
     const date = new Date(isoString);
     const now = new Date();
 
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffTime =
+      Math.abs(
+        now.getTime() - date.getTime()
+      );
 
-    const options: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" };
-    const formattedDate = date.toLocaleString("id-ID", options);
+    const diffDays = Math.floor(
+      diffTime /
+        (1000 * 60 * 60 * 24)
+    );
 
-    let konteksHari = "Hari ini";
+    let konteksHari = 'Hari ini';
+
     if (diffDays > 0) {
       konteksHari = `${diffDays} hari lalu`;
     }
 
-    return { formattedDate, diffDays, konteksHari };
+    return {
+      formattedDate: formatDate(
+        isoString
+      ),
+      diffDays,
+      konteksHari,
+    };
   };
-
-  // 4. LOGIKA IKON SESUAI JENIS SURAT
-  // const getSuratIcon = (jenis: string) => {
-  //   const j = jenis.toLowerCase();
-  //   if (j.includes("domisili")) return <MapPinIcon className="w-4 h-4 text-sky-600" />;
-  //   if (j.includes("pemberitahuan") || j.includes("pengantar")) return <FileText className="w-4 h-4 text-violet-600" />;
-  //   if (j.includes("kematian") || j.includes("sakit")) return <AlertTriangle className="w-4 h-4 text-amber-600" />;
-  //   return <FileText className="w-4 h-4 text-slate-600" />;
-  // };
 
   const getSuratIcon = (jenis: string) => {
     return <FileText className="w-4 h-4 text-slate-500" />;

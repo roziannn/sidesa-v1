@@ -8,6 +8,7 @@ import { Calendar, ChevronLeft, ChevronRight, Eye, Plus, } from 'lucide-react';
 import DataTable, {
   Column,
 } from '@/components/DataTable';
+import { formatDate } from '@/lib/format';
 
 type Kegiatan = {
   id: string;
@@ -115,35 +116,20 @@ export default function KegiatanClient({
       {
         label: 'Tanggal',
         key: 'tanggal',
-
-        render: (val) => (
-          <span>
-            {new Date(
-              String(val)
-            ).toLocaleDateString(
-              'id-ID',
-              {
-                day: '2-digit',
-                month:
-                  'long',
-                year:
-                  'numeric',
-              }
-            )}
-          </span>
-        ),
+        render: (val) =>
+        formatDate(String(val)),
       },
-{
-  label: 'Waktu',
-  key: 'waktu',
+        {
+        label: 'Waktu',
+        key: 'waktu',
 
-  render: (_, row) => (
-    <span>
-      {row.waktu_mulai.slice(0, 5)} -{' '}
-      {row.waktu_selesai.slice(0, 5)}
-    </span>
-  ),
-},
+        render: (_, row) => (
+            <span>
+            {row.waktu_mulai.slice(0, 5)} -{' '}
+            {row.waktu_selesai.slice(0, 5)}
+            </span>
+        ),
+        },
       {
         label: 'Peserta',
         key: 'peserta',

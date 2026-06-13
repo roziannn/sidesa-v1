@@ -4,6 +4,7 @@
 import { Bell } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabaseClient } from "@/lib/supabase/client";
+import { formatDate } from "@/lib/format";
 
 interface NotificationItem {
   id: number;
@@ -76,7 +77,7 @@ export default function NotificationBell() {
                     <p className={`text-[13px] font-bold ${!n.is_read ? "text-slate-800" : "text-slate-600"}`}>{n.judul}</p>
                   </div>
                   <p className="text-[12px] text-slate-500 mt-0.5 leading-relaxed">{n.pesan}</p>
-                  <p className="text-[9px] text-slate-400 mt-2 uppercase">{new Date(n.created_at).toLocaleDateString("id-ID")}</p>
+                  <p className="text-[9px] text-slate-400 mt-2 uppercase">{formatDate(n.created_at)}</p>
                 </div>
               ))
             ) : (

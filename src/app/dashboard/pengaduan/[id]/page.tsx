@@ -3,7 +3,7 @@ import StatusBadge from '@/components/StatusBadge';
 import { createClient } from '@/lib/supabase/server';
 import PengaduanActionButtons from '@components/pengaduan/PengaduanActionButton';
 import CatatanPetugasForm from '@components/pengaduan/PengaduanCatatanForm';
-
+import {formatDate, formatDateTime} from '@/lib/format';
 
 async function getPengaduan(id: string) {
   const supabase = await createClient();
@@ -100,14 +100,9 @@ export default async function DetailPengaduanPage({
               <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                 Tanggal Pengaduan
               </p>
-
-              <p className="mt-2 text-sm font-semibold text-gray-900">
-                {new Date(
-                  pengaduan.tanggal
-                ).toLocaleDateString('id-ID', {
-                  dateStyle: 'long',
-                })}
-              </p>
+             <p className="mt-2 text-sm font-semibold text-gray-900">
+              {formatDateTime(pengaduan.tanggal)}
+            </p>
             </div>
 
             <div className="border-b border-gray-200 pb-3">

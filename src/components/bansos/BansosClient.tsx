@@ -10,6 +10,7 @@ import FormPenerimaBansos from "@/components/bansos/FormPenerimaBansos";
 import FormProgram from "@/components/bansos/FormPage"; 
 import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
+import { formatRupiah } from "@/lib/format";
 
 interface PenerimaBansos {
   id: string;
@@ -259,7 +260,11 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
     {
       key: "jumlah_bantuan",
       label: "Jumlah Bantuan",
-      render: (val) => <span className="font-bold text-slate-700">Rp {Number(val ?? 0).toLocaleString("id-ID")}</span>,
+     render: (val) => (
+      <span className="font-bold font-mono">
+        {formatRupiah(Number(val))}
+      </span>
+    )
     },
     { key: "periode", label: "Periode" },
     {

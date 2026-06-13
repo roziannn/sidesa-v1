@@ -4,7 +4,6 @@ import ArsipClient from "@/components/surat/ArsipClient";
 export default async function ArsipPage() {
   const supabase = await createClient();
 
-  // Ambil data awal dengan join ke profiles
   const { data: arsip, error } = await supabase
     .from("surat")
     .select(`
@@ -16,7 +15,10 @@ export default async function ArsipPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold mb-6">Arsip Surat</h1>
+      <div>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Arsip Surat</h1>
+          <p className="text-sm text-slate-500 mt-1">Kelola permohonan arsip surat dan dokumen warga.</p>
+        </div>
       <ArsipClient initialData={arsip || []} />
     </div>
   );

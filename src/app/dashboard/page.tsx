@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 // Import komponen greeting yang baru
 import Greeting from "@/components/dashboard/Greeting";
+import { formatDate } from "@/lib/format";
 
 export const revalidate = 0;
 
@@ -168,7 +169,7 @@ async function DashboardContent() {
                       </td>
                       <td className="p-4 text-xs">{s.jenis_surat}</td>
                       <td className="p-4 text-xs text-slate-400">
-                        {new Date(s.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })}
+                        {formatDate(s.created_at)}
                       </td>
                       <td className="p-4 text-center">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none ${
@@ -211,10 +212,10 @@ async function DashboardContent() {
                   </div>
                   <div className="bg-slate-100 px-3 py-1.5 rounded-lg text-center flex-shrink-0 min-w-[55px]">
                     <p className="text-xs font-bold text-slate-700">
-                      {new Date(k.tanggal_pelaksanaan).toLocaleDateString("id-ID", { day: "2-digit" })}
+                      {formatDate(k.tanggal_pelaksanaan)}
                     </p>
                     <p className="text-[10px] text-slate-400 uppercase font-semibold">
-                      {new Date(k.tanggal_pelaksanaan).toLocaleDateString("id-ID", { month: "short" })}
+                      {formatDate(k.tanggal_pelaksanaan)}
                     </p>
                   </div>
                 </div>

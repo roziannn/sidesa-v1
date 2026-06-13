@@ -13,5 +13,68 @@ export const parseRupiah = (value: string): number => {
   return Number(value.replace(/[^0-9]/g, ''));
 };
 
-export const formatDate = (date: string) => 
-  new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+export const formatDate = (
+  date: string | Date
+) =>
+  new Date(date).toLocaleDateString(
+    'id-ID',
+    {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }
+  );
+
+export const formatShortDate = (
+  date: string | Date
+) =>
+  new Date(date).toLocaleDateString(
+    'id-ID',
+    {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }
+  );
+
+export const formatDateTime = (
+  date: string | Date
+) =>
+  new Date(date).toLocaleString(
+    'id-ID',
+    {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }
+  );
+
+export const formatTime = (
+  time: string
+) => time.slice(0, 5);
+
+export const formatMonthYear = (
+  date: string | Date
+) =>
+  new Date(date).toLocaleDateString(
+    'id-ID',
+    {
+      month: 'long',
+      year: 'numeric',
+    }
+  );
+
+export const formatDayDate = (
+  date: string | Date
+) =>
+  new Date(date).toLocaleDateString(
+    'id-ID',
+    {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }
+  );

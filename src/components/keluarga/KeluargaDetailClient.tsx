@@ -9,6 +9,7 @@ import DataTable, { Column } from "@/components/DataTable";
 import ConfirmModal from "@/components/ConfirmModal";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
+import { formatDate } from "@/lib/format";
 
 interface AnggotaKeluarga {
   id: string;
@@ -85,15 +86,6 @@ export default function KeluargaDetailClient({ keluarga }: KeluargaDetailClientP
       usia--;
     }
     return `${usia} Tahun`;
-  };
-
-  const formatTanggalIndo = (tglString: string) => {
-    if (!tglString) return "-";
-    return new Date(tglString).toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
   };
 
   const samarkanNik = (nikStr: string) => {
@@ -269,7 +261,7 @@ export default function KeluargaDetailClient({ keluarga }: KeluargaDetailClientP
         return <span className={`px-2 py-0.5 text-xs font-semibold rounded-full border ${badgeStyle}`}>{val}</span>;
       },
     },
-    { key: "tgl_lahir", label: "Tanggal Lahir", render: (value) => formatTanggalIndo(String(value)) },
+    { key: "tgl_lahir", label: "Tanggal Lahir", render: (value) => formatDate(String(value)) },
     { key: "usia", label: "Usia", render: (_v, row) => hitungUsia(row.tgl_lahir) },
     {
       key: "jenis_kelamin",
@@ -331,7 +323,7 @@ export default function KeluargaDetailClient({ keluarga }: KeluargaDetailClientP
           <div className="flex flex-col sm:flex-row sm:justify-between py-1 border-b border-slate-100">
             <span className="text-slate-400 font-medium sm:w-1/3">Terdaftar Sejak</span>
             <span className="text-slate-800 font-medium sm:w-2/3 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" /> {formatTanggalIndo(keluarga.created_at)}
+              <Calendar className="w-3.5 h-3.5 text-slate-400" /> {formatDate(keluarga.created_at)}
             </span>
           </div>
           <div className="flex flex-col sm:flex-row py-1 md:col-span-2 items-start pt-2">
@@ -452,7 +444,13 @@ export default function KeluargaDetailClient({ keluarga }: KeluargaDetailClientP
                       <td className="border-r border-black p-0.5 font-mono text-[9px] tracking-wider">{item?.nik || ""}</td>
                       <td className="border-r border-black p-0.5 uppercase text-[7.5px]">{item ? (item.jenis_kelamin === "L" ? "LAKI-LAKI" : "PEREMPUAN") : ""}</td>
                       <td className="border-r border-black p-0.5 uppercase text-[8px] truncate">{item ? "BEKASI" : ""}</td>
-                      <td className="border-r border-black p-0.5 font-mono text-[8px]">{item ? new Date(item.tgl_lahir).toLocaleDateString("id-ID") : ""}</td>
+                      <td className="border-r border-black p-0.5 font-mono text-[8px]">
+                        {item
+                          ? formatDate(
+                              item.tgl_lahir
+                            )
+                          : ""}
+                      </td>
                       <td className="border-r border-black p-0.5 uppercase text-[7.5px]">{item ? "ISLAM" : ""}</td>
                       <td className="p-0.5 text-left px-1 uppercase text-[7.5px] truncate">{item ? "SLTA / SEDERAJAT" : ""}</td>
                     </tr>
@@ -515,7 +513,7 @@ export default function KeluargaDetailClient({ keluarga }: KeluargaDetailClientP
             <div className="text-center space-y-7 pr-4 text-[8.5px]">
               <div>
                 <p>Dikeluarkan Di : CIKARANG PUSAT</p>
-                <p>Pada Tanggal : {new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}</p>
+                <p>Pada Tanggal : {formatDate(new Date())}</p>
                 <p className="mt-1 font-bold uppercase border-t border-black pt-0.5 text-[8px]">KEPALA DINAS KEPENDUDUKAN DAN</p>
                 <p className="font-bold uppercase text-[8px]">PENCATATAN SIPIL KABUPATEN BEKASI</p>
               </div>

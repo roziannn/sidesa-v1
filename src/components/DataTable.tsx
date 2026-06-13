@@ -26,7 +26,7 @@ export default function DataTable<T>({ columns, data, isLoading = false, onEdit,
   const rowsPerPage = 10;
   
   // Logika Slicing Data
-  const totalPages = Math.ceil(data.length / rowsPerPage);
+  const totalPages = Math.max(1, Math.ceil(data.length / rowsPerPage));
   const paginatedData = data.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -91,30 +91,46 @@ export default function DataTable<T>({ columns, data, isLoading = false, onEdit,
       </div>
 
       {/* FOOTER PAGINATION */}
-      {totalPages > 1 && (
-        <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50">
-          <span className="text-xs text-slate-500">
-            Menampilkan { (currentPage - 1) * rowsPerPage + 1 } - { Math.min(currentPage * rowsPerPage, data.length) } dari {data.length} data
-          </span>
-          <div className="flex items-center gap-1">
-            <button 
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => prev - 1)}
-              className="p-1.5 rounded hover:bg-slate-200 disabled:opacity-50"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="text-xs font-semibold px-2">{currentPage} / {totalPages}</span>
-            <button 
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(prev => prev + 1)}
-              className="p-1.5 rounded hover:bg-slate-200 disabled:opacity-50"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
+      <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50">
+      <span className="text-xs text-slate-500">
+        {data.length > 0
+          ? `Menampilkan ${
+              (currentPage - 1) * rowsPerPage + 1
+            } - ${Math.min(
+              currentPage * rowsPerPage,
+              data.length
+            )} dari ${data.length} data`
+          : 'Tidak ada data'}
+      </span>
+
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => {
+            if (currentPage > 1) {
+              setCurrentPage((prev) => prev - 1);
+            }
+          }}
+          className="p-1.5 rounded hover:bg-slate-200"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+
+        <span className="text-xs font-semibold px-2">
+          {currentPage} / {Math.max(1, totalPages)}
+        </span>
+
+        <button
+          onClick={() => {
+            if (currentPage < totalPages) {
+              setCurrentPage((prev) => prev + 1);
+            }
+          }}
+          className="p-1.5 rounded hover:bg-slate-200"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
     </div>
   );
 }

@@ -40,8 +40,6 @@ export default function KeluargaClient({ initialData, totalKK }: KeluargaClientP
     );
   });
 
-  // Perbaikan Utama: Semua parameter fungsi render diberi tipe data eksplisit (unknown, KeluargaData)
-  // Kolom No diubah hanya menerima 2 parameter agar sinkron dengan interface DataTable kamu
   const columns: Column<KeluargaData>[] = [
     { key: "nomor_kk", label: "Nomor KK" },
     { key: "nama_kepala", label: "Nama Kepala KK" },
@@ -93,7 +91,6 @@ export default function KeluargaClient({ initialData, totalKK }: KeluargaClientP
 
   return (
     <div className="space-y-6">
-      {/* HEADER ACTION */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Data Keluarga</h1>
@@ -108,7 +105,6 @@ export default function KeluargaClient({ initialData, totalKK }: KeluargaClientP
         </Link>
       </div>
 
-      {/* SEARCH BAR PANEL */}
       <div className="relative w-full sm:max-w-md">
         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
           <Search className="w-4 h-4" />
@@ -129,7 +125,6 @@ export default function KeluargaClient({ initialData, totalKK }: KeluargaClientP
         isLoading={isPending}
         onView={(row) => router.push(`/dashboard/keluarga/${row.id}`)}
         onEdit={(row) => router.push(`/dashboard/keluarga/${row.id}/edit`)}
-        onDelete={handleDeleteClick}
       />
 
       {/* CONFIRMATION MODAL */}

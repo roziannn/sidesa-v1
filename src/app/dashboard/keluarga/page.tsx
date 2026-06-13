@@ -52,10 +52,8 @@ async function KeluargaServerFetch() {
     alamat: k.alamat,
     rt: k.rt || "00",
     rw: k.rw || "00",
-    // Mengekstrak count dengan aman tanpa teks typo asing
     jumlah_anggota: k.anggota && k.anggota[0] ? Number(k.anggota[0].count) : 0,
   }));
 
-  // Kirim data yang telah bersih ke komponen client side interaktif
   return <KeluargaClient initialData={cleanedData} totalKK={cleanedData.length} />;
 }

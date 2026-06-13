@@ -7,7 +7,13 @@ import {
   Wallet, 
   Clock, 
   CheckCircle, 
-  XCircle 
+  XCircle, 
+  Users,
+  Mars,
+  Venus,
+  PinIcon,
+  LocateIcon,
+  House
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 // Import komponen greeting yang baru
@@ -35,12 +41,56 @@ export default async function DashboardOverviewPage() {
     }
   }
 
-  return (
-    <div className="space-y-8">
-      {/* Bagian Atas: Menggunakan komponen Greeting Client-Side */}
-      <Greeting namaManager={namaManager} />
+  const [
+  totalWarga,
+  totalLakiLaki,
+  totalPerempuan,
+] = await Promise.all([
+  supabase
+    .from("anggota")
+    .select("*", {
+      count: "exact",
+      head: true,
+    }),
 
-      {/* Bagian Konten Utama */}
+  supabase
+    .from("anggota")
+    .select("*", {
+      count: "exact",
+      head: true,
+    })
+    .eq(
+      "jenis_kelamin",
+      "L"
+    ),
+
+  supabase
+    .from("anggota")
+    .select("*", {
+      count: "exact",
+      head: true,
+    })
+    .eq(
+      "jenis_kelamin",
+      "P"
+    ),
+]);
+
+const countWarga =
+  totalWarga.count ?? 0;
+
+const countLakiLaki =
+  totalLakiLaki.count ?? 0;
+
+const countPerempuan =
+  totalPerempuan.count ?? 0;
+
+  return (
+    <div className="space-y-6">
+      <Greeting
+      namaManager={namaManager}
+    />
+
       <Suspense fallback={<DashboardSkeleton />}>
         <DashboardContent />
       </Suspense>
@@ -52,7 +102,7 @@ export default async function DashboardOverviewPage() {
 async function DashboardContent() {
   const supabase = await createClient();
 
-  // Mendapatkan rentang tanggal awal dan akhir bulan ini untuk filter kegiatan
+  // mendapatkan rentang tanggal awal dan akhir bulan ini untuk filter kegiatan
   const sekarang = new Date();
   const awalBulan = new Date(sekarang.getFullYear(), sekarang.getMonth(), 1).toISOString();
   const akhirBulan = new Date(sekarang.getFullYear(), shendBulanDate(), 31).toISOString(); 
@@ -60,7 +110,7 @@ async function DashboardContent() {
     return sekarang.getMonth() + 1;
   }
 
-  // Melakukan eksekusi query secara paralel untuk efisiensi performa server
+  // melakukan eksekusi query secara paralel untuk efisiensi performa server
   const [
     totalKK,
     bansosAktif,
@@ -68,7 +118,6 @@ async function DashboardContent() {
     suratPending,
     retribusiBelumBayar,
     suratTerbaru,
-    kegiatanMendatang
   ] = await Promise.all([
     // 1. Total KK
     supabase.from("keluarga").select("*", { count: "exact", head: true }),
@@ -77,9 +126,9 @@ async function DashboardContent() {
     supabase.from("bansos").select("*", { count: "exact", head: true }).eq("status", "tersalurkan"),
     
     // 3. Kegiatan Bulan Ini
-    supabase.from("kegiatan").select("*", { count: "exact", head: true })
-      .gte("tanggal_pelaksanaan", awalBulan)
-      .lte("tanggal_pelaksanaan", akhirBulan),
+    supabase.from("kegiatan").select(
+      "id, judul, tanggal_pelaksanaan, lokasi, kuota"
+    ),
     
     // 4. Surat Pending Approval
     supabase.from("surat").select("*", { count: "exact", head: true }).eq("status", "pending"),
@@ -100,13 +149,80 @@ async function DashboardContent() {
       .order("tanggal_pelaksanaan", { ascending: true })
       .limit(3)
   ]);
+const today =
+  new Date()
+    .toISOString()
+    .split("T")[0];
 
-  // Ekstraksi data statistik counts (jika null atau error, default ke 0)
+  const kegiatanMendatang =
+  await supabase
+    .from("kegiatan")
+    .select(
+      "id, judul, tanggal, lokasi, kuota"
+    )
+    .gte(
+      "tanggal",
+      awalBulan
+    )
+    .lte(
+      "tanggal",
+      akhirBulan
+    )
+    .eq(
+      "status",
+      "aktif"
+    )
+    .order(
+      "tanggal",
+      {
+        ascending: true,
+      }
+    )
+    .limit(5);
+
+  // ekstraksi data statistik counts (jika null atau error, default ke 0)
   const countKK = totalKK.count || 0;
   const countBansos = bansosAktif.count || 0;
   const countKegiatan = kegiatanBulanIni.count || 0;
   const countSurat = suratPending.count || 0;
   const countRetribusi = retribusiBelumBayar.count || 0;
+
+  const suratChartRaw =
+  await supabase
+    .from("surat")
+    .select("jenis_surat");
+
+const suratChartData = Object.values(
+  (suratChartRaw.data ?? []).reduce(
+    (acc, item) => {
+      const jenis =
+        item.jenis_surat ||
+        "Lainnya";
+
+      if (!acc[jenis]) {
+        acc[jenis] = {
+          jenis,
+          total: 0,
+        };
+      }
+
+      acc[jenis].total += 1;
+
+      return acc;
+    },
+    {} as Record<
+      string,
+      {
+        jenis: string;
+        total: number;
+      }
+    >
+  )
+)
+.sort(
+  (a, b) =>
+    b.total - a.total
+);
 
   // Struktur data kartu statistik untuk mempermudah perulangan loop (.map)
   const stats = [
@@ -117,123 +233,282 @@ async function DashboardContent() {
     { label: "Retribusi Tertunggak", value: countRetribusi, sub: "Tagihan Aktif", icon: Wallet, bgIcon: "bg-red-50 text-red-600" },
   ];
 
+  const [
+  totalWarga,
+  totalLakiLaki,
+  totalPerempuan,
+] = await Promise.all([
+  supabase
+    .from("anggota")
+    .select("*", {
+      count: "exact",
+      head: true,
+    }),
+
+  supabase
+    .from("anggota")
+    .select("*", {
+      count: "exact",
+      head: true,
+    })
+    .eq(
+      "jenis_kelamin",
+      "L"
+    ),
+
+  supabase
+    .from("anggota")
+    .select("*", {
+      count: "exact",
+      head: true,
+    })
+    .eq(
+      "jenis_kelamin",
+      "P"
+    ),
+]);
+
+const countWarga =
+  totalWarga.count ?? 0;
+
+const countLakiLaki =
+  totalLakiLaki.count ?? 0;
+
+const countPerempuan =
+  totalPerempuan.count ?? 0;
+
   return (
     <>
-      {/* ---------------------------------------------------------------- */}
-      {/* GRID KARTU STATISTIK (Responsive: 2-Mobile, 3-Tablet, 5-Desktop) */}
-      {/* ---------------------------------------------------------------- */}
+   <div className="grid gap-4 lg:grid-cols-12">
+
+    {/* Ringkasan */}
+    <div className="lg:col-span-9 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-700 p-6 text-white shadow-lg">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-emerald-100">
+            Ringkasan Hari Ini
+          </p>
+
+          <h2 className="mt-2 text-3xl font-bold">
+            {countSurat} Surat Menunggu Persetujuan
+          </h2>
+
+          <p className="mt-2 text-emerald-100">
+            {countKegiatan} kegiatan bulan ini |
+            {" "}
+            {countRetribusi} retribusi belum dibayar
+          </p>
+        </div>
+
+        <div className="hidden md:block">
+          {formatDate(new Date())}
+        </div>
+      </div>
+    </div>
+
+    {/* Statistik Warga */}
+    <div className="lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <span className="text-slate-600 flex gap-1">
+          <Users className="w-4 h-4"/> Total Warga
+        </span>
+
+        <span className="text-xl font-bold text-slate-900">
+          {countWarga}
+        </span>
+      </div>
+
+      <div className="my-3 h-px bg-slate-200" />
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-slate-600 flex gap-1">
+            <Mars className="w-4 h-4"/> Laki-laki
+          </span>
+
+          <span className="font-semibold text-blue-600">
+            {countLakiLaki}
+            {" ("}
+            {(
+              (countLakiLaki /
+                countWarga) *
+              100
+            ).toFixed(1)}
+            %)
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-slate-600 flex gap-1">
+            <Venus className="w-4 h-4"/> Perempuan
+          </span>
+
+          <span className="font-semibold text-pink-600">
+            {countPerempuan}
+            {" ("}
+            {(
+              (countPerempuan /
+                countWarga) *
+              100
+            ).toFixed(1)}
+            %)
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {stats.map((stat, i) => (
           <div key={i} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
             <div className="flex items-start justify-between">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</span>
+              <span className="text-xs font-semibold text-slate-400 uppercase">{stat.label}</span>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${stat.bgIcon}`}>
                 <stat.icon className="w-4 h-4" />
               </div>
             </div>
-            <div className="mt-4">
-              <p className="text-3xl font-bold text-slate-800 tracking-tight">{stat.value}</p>
-              <p className="text-xs text-slate-400 mt-1">{stat.sub}</p>
+            <div className="mt-1">
+              <p className="text-md font-bold text-slate-800">{stat.value} {stat.sub}</p>
             </div>
           </div>
         ))}
       </div>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* SEKSI DATA TABEL BAWAH (Split 2 Kolom pada Layar Lebar)         */}
-      {/* ---------------------------------------------------------------- */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Tabel Surat Terbaru (Lebar Kolom: 7/12) */}
-        <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center gap-2">
-            <FileText className="w-4 h-4 text-slate-400" />
-            <h3 className="font-bold text-slate-800 text-sm">5 Pengajuan Surat Terbaru</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-400 font-semibold text-xs">
-                  <th className="p-4">Pemohon</th>
-                  <th className="p-4">Jenis Surat</th>
-                  <th className="p-4">Tanggal</th>
-                  <th className="p-4 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-600">
-                {suratTerbaru.data && suratTerbaru.data.length > 0 ? (
-                  suratTerbaru.data.map((s: any) => (
-                    <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-4 font-medium text-slate-700 truncate max-w-[140px]">
-                        {s.profiles?.nama_lengkap || "Warga"}
-                      </td>
-                      <td className="p-4 text-xs">{s.jenis_surat}</td>
-                      <td className="p-4 text-xs text-slate-400">
-                        {formatDate(s.created_at)}
-                      </td>
-                      <td className="p-4 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium leading-none ${
-                          s.status === "pending" ? "bg-amber-50 text-amber-700 border border-amber-200" :
-                          s.status === "disetujui" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
-                          "bg-rose-50 text-rose-700 border border-rose-200"
-                        }`}>
-                          {s.status === "pending" && <Clock className="w-3 h-3" />}
-                          {s.status === "disetujui" && <CheckCircle className="w-3 h-3" />}
-                          {s.status === "ditolak" && <XCircle className="w-3 h-3" />}
-                          <span className="capitalize">{s.status}</span>
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="p-8 text-center text-slate-400 text-xs">Belum ada pengajuan surat masuk.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+       <div className="lg:col-span-8 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="flex items-center justify-between p-6">
+      <div>
+        <h3 className="font-bold text-slate-800">
+          Statistik Pengajuan Surat
+        </h3>
 
-        {/* Tabel Kegiatan Mendatang (Lebar Kolom: 5/12) */}
-        <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <h3 className="font-bold text-slate-800 text-sm">Agenda Kegiatan Terdekat</h3>
-          </div>
-          <div className="divide-y divide-slate-100">
-            {kegiatanMendatang.data && kegiatanMendatang.data.length > 0 ? (
-              kegiatanMendatang.data.map((k: any) => (
-                <div key={k.id} className="p-4 hover:bg-slate-50/50 transition-colors flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <h4 className="text-sm font-semibold text-slate-700 truncate">{k.judul}</h4>
-                    <p className="text-xs text-slate-400 mt-1 truncate">📍 {k.lokasi}</p>
-                    <p className="text-[11px] text-[#15803d] font-medium mt-1">Kuota: {k.kuota || "Tidak terbatas"} warga</p>
-                  </div>
-                  <div className="bg-slate-100 px-3 py-1.5 rounded-lg text-center flex-shrink-0 min-w-[55px]">
-                    <p className="text-xs font-bold text-slate-700">
-                      {formatDate(k.tanggal_pelaksanaan)}
-                    </p>
-                    <p className="text-[10px] text-slate-400 uppercase font-semibold">
-                      {formatDate(k.tanggal_pelaksanaan)}
-                    </p>
-                  </div>
+        <p className="text-sm text-slate-500">
+          Jumlah pengajuan berdasarkan jenis surat
+        </p>
+      </div>
+    </div>
+
+  <div className="px-6 mb-6">
+    <div className="space-y-5">
+      {suratChartData.length > 0 ? (
+        suratChartData.map(
+          (item) => {
+            const max =
+              suratChartData[0]
+                .total;
+
+            const width =
+              (item.total /
+                max) *
+              100;
+
+            return (
+              <div
+                key={
+                  item.jenis
+                }
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-700">
+                    {
+                      item.jenis
+                    }
+                  </span>
+
+                  <span className="text-sm font-bold text-slate-900">
+                    {
+                      item.total
+                    }
+                  </span>
                 </div>
-              ))
-            ) : (
-              <div className="p-8 text-center text-slate-400 text-xs">Tidak ada kegiatan terdekat dalam waktu dekat.</div>
-            )}
-          </div>
+
+                <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-green-600 transition-all"
+                    style={{
+                      width: `${width}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          }
+        )
+      ) : (
+        <div className="py-12 text-center text-sm text-slate-400">
+          Belum ada data pengajuan surat.
         </div>
+      )}
+    </div>
+  </div>
+</div>
+
+  <div className="lg:col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+     <div className="flex items-center justify-between p-6">
+      <div>
+        <h3 className="font-bold text-slate-800">
+          Agenda Mendatang
+        </h3>
+
+        <p className="text-sm text-slate-500">
+          Kegiatan desa yang akan berlangsung
+        </p>
+      </div>
+  </div>
+
+  <div className="px-6 mb-6">
+    {kegiatanMendatang.data &&
+    kegiatanMendatang.data.length > 0 ? (
+      <div className="space-y-5">
+        {kegiatanMendatang.data.map(
+          (k: any, index) => (
+            <div
+              key={k.id}
+              className="relative pl-8"
+            >
+              {/* Timeline */}
+              <div className="absolute left-0 top-1 h-3 w-3 rounded-full bg-emerald-600" />
+
+              {index !==
+                kegiatanMendatang.data.length -
+                  1 && (
+                <div className="absolute left-[5px] top-4 bottom-[-24px] w-px bg-slate-200" />
+              )}
+
+              <div>
+                <h4 className="font-semibold text-slate-800">
+                  {k.judul}
+                </h4>
+
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  <span className="flex gap-1">
+                    <Calendar className="w-3 h-3"/>
+                    {formatDate(
+                      k.tanggal
+                    )} -
+                  </span>
+
+                  <span className="flex gap-1">
+                  <House className="w-3 h-3"/> {k.lokasi}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )
+        )}
+      </div>
+      ) : (
+        <div className="py-10 text-center text-sm text-slate-400">
+          Tidak ada kegiatan terdekat.
+        </div>
+      )}
+    </div>
+  </div>
 
       </div>
     </>
   );
 }
 
-// ------------------------------------------------------------------
-// KOMPONEN LOADING SKELETON (Animasi Kedip Abu-abu saat Data Dimuat)
-// ------------------------------------------------------------------
 function DashboardSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">

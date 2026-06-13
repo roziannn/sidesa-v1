@@ -1,42 +1,32 @@
 import SurveyKepuasanClient from '@components/survey-kepuasan/SurveyKepuasanClient';
 import { ClipboardList } from 'lucide-react';
 
+import { createClient } from '@/lib/supabase/server';
+
 async function getData() {
-  return [
-    {
-      id: '1',
-      nama: 'Budi Santoso',
-      layanan: 'Surat Domisili',
-      rating: 5,
-      komentar: 'Pelayanan sangat cepat dan ramah.',
-      tanggal: '2026-06-12',
-    },
-    {
-      id: '2',
-      nama: 'Siti Rahma',
-      layanan: 'Pengaduan',
-      rating: 4,
-      komentar: 'Pengaduan ditindaklanjuti dengan baik.',
-      tanggal: '2026-06-11',
-    },
-    {
-      id: '3',
-      nama: 'Agus Jaya',
-      layanan: 'Surat Usaha',
-      rating: 3,
-      komentar: 'Proses cukup baik namun agak lama.',
-      tanggal: '2026-06-10',
-    },
-    {
-      id: '4',
-      nama: 'Dewi Lestari',
-      layanan: 'Surat Domisili',
-      rating: 5,
-      komentar: 'Sangat puas.',
-      tanggal: '2026-06-09',
-    },
-  ];
+  const supabase =
+    await createClient();
+
+  const { data, error } =
+    await supabase
+      .from('survey_kepuasan')
+      .select('*')
+      .order('created_at', {
+        ascending: false,
+      });
+
+  if (error) {
+    console.error(
+      '[SURVEY_GET]',
+      error
+    );
+
+    return [];
+  }
+
+  return data;
 }
+
 
 export default async function SurveyKepuasanPage() {
   const data = await getData();

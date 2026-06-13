@@ -43,15 +43,6 @@ export default function KeluargaClient({ initialData, totalKK }: KeluargaClientP
   // Perbaikan Utama: Semua parameter fungsi render diberi tipe data eksplisit (unknown, KeluargaData)
   // Kolom No diubah hanya menerima 2 parameter agar sinkron dengan interface DataTable kamu
   const columns: Column<KeluargaData>[] = [
-    // {
-    //   key: "id", // Menggunakan key id bawaan yang pasti unik untuk memancing row data
-    //   label: "No",
-    //   render: (value: unknown, row: KeluargaData) => {
-    //     // Mencari indeks baris secara dinamis agar aman tanpa parameter indeks ketiga
-    //     const index = filteredData.findIndex((item) => item.id === row.id);
-    //     return <span className="font-medium text-slate-400">{index + 1}</span>;
-    //   },
-    // },
     { key: "nomor_kk", label: "Nomor KK" },
     { key: "nama_kepala", label: "Nama Kepala KK" },
     {

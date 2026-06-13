@@ -500,7 +500,6 @@ export default function SuratClient({ initialSurat }: ClientProps) {
         })}
       </div>
 
-      {/* ================= INTEGRASI DATATABLE COMPONENT ================= */}
       <DataTable columns={columns} data={filteredSurat} isLoading={loadingId === "fetch-awal"} />
 
       {/* ================= MODAL TOLAK SURAT ================= */}

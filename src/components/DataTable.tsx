@@ -32,7 +32,7 @@ export default function DataTable<T>({ columns, data, isLoading = false, onEdit,
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   return (
-    <div className="w-full bg-white shadow-sm overflow-hidden rounded-md">
+    <div className="w-full shadow-sm overflow-hidden rounded-lg">
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left text-[13px] border-collapse">
           <thead>

@@ -375,14 +375,13 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <DataTable 
           columns={columns} 
           data={filteredData.map(item => ({
               ...item,
           }))} 
         />
-      </div>
+        
       <ConfirmModal
         isOpen={isPayModalOpen}
         title="Konfirmasi Pembayaran"

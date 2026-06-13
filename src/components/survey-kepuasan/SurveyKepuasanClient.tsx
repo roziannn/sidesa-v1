@@ -3,13 +3,13 @@
 import DataTable, { Column } from '@/components/DataTable';
 import { Star, Trophy } from 'lucide-react';
 
-interface SurveyKepuasan {
-  id: string;
+ interface SurveyKepuasan {
+  id: number;
   nama: string;
-  layanan: string;
-  rating: number;
-  komentar: string;
-  tanggal: string;
+  pelayanan: string;
+  average_nilai: number;
+  saran: string | null;
+  created_at: string;
 }
 
 function RatingStars({ rating }: { rating: number }) {
@@ -36,20 +36,23 @@ export default function SurveyKepuasanClient({
 }) {
   const totalResponden = data.length;
 
-  const rataRata =
-    data.reduce((sum, item) => sum + item.rating, 0) /
-    totalResponden;
+  const rataRata = totalResponden > 0
+    ? data.reduce( (sum, item) =>
+          sum + item.average_nilai,
+        0
+      ) / totalResponden
+    : 0;
 const layananStats = data.reduce(
   (acc, item) => {
-    if (!acc[item.layanan]) {
-      acc[item.layanan] = {
+    if (!acc[item.pelayanan]) {
+      acc[item.pelayanan] = {
         total: 0,
         count: 0,
       };
     }
 
-    acc[item.layanan].total += item.rating;
-    acc[item.layanan].count += 1;
+    acc[item.pelayanan].total += item.average_nilai;
+    acc[item.pelayanan].count += 1;
 
     return acc;
   },
@@ -64,40 +67,55 @@ const layananStats = data.reduce(
 
 const pelayananTerbaik =
   Object.entries(layananStats)
-    .map(([layanan, stats]) => ({
-      layanan,
-      rataRata:
-        stats.total / stats.count,
-    }))
+    .map(
+      ([pelayanan, stats]) => ({
+        pelayanan,
+        rataRata:
+          stats.total /
+          stats.count,
+      })
+    )
     .sort(
-      (a, b) => b.rataRata - a.rataRata
-    )[0]?.layanan ?? '-';
+      (a, b) =>
+        b.rataRata -
+        a.rataRata
+    )[0]?.pelayanan ?? '-';
 
-  const columns: Column<SurveyKepuasan>[] = [
-    {
-      label: 'Nama',
-      key: 'nama',
-    },
-    {
-      label: 'Layanan',
-      key: 'layanan',
-    },
-    {
-      label: 'Rating',
-      key: 'rating',
-      render: (val) => (
+ const columns: Column<SurveyKepuasan>[] = [
+  {
+    label: 'Nama',
+    key: 'nama',
+  },
+  {
+    label: 'Pelayanan',
+    key: 'pelayanan',
+  },
+  {
+    label: 'Nilai',
+    key: 'average_nilai',
+    render: (val) => (
+      <div className="flex items-center gap-2">
         <RatingStars rating={Number(val)} />
+        <span className="font-medium">
+          {Number(val).toFixed(1)}
+        </span>
+      </div>
+    ),
+  },
+  {
+    label: 'Saran',
+    key: 'saran',
+    render: (val) => String(val ?? '-')
+  },
+  {
+    label: 'Tanggal',
+    key: 'created_at',
+    render: (val) =>
+      new Date(String(val)).toLocaleDateString(
+        'id-ID'
       ),
-    },
-    {
-      label: 'Komentar',
-      key: 'komentar',
-    },
-    {
-      label: 'Tanggal',
-      key: 'tanggal',
-    },
-  ];
+  },
+];
 
   return (
     <div className="space-y-6">
@@ -147,12 +165,10 @@ const pelayananTerbaik =
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <DataTable
           columns={columns}
           data={data}
         />
       </div>
-    </div>
   );
 }

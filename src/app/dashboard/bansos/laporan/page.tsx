@@ -124,9 +124,7 @@ export default async function LaporanBansosPage({ searchParams }: LaporanPagePro
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <LaporanTableClient records={records} />
-      </div>
     </div>
   );
 }

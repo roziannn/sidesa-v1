@@ -9,6 +9,8 @@ import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { keluargaSchema, type KeluargaFormValues } from "@/types/keluarga";
 import Button from "@components/ui/Button";
+import Input from "@components/ui/Input";
+import Textarea from "@components/ui/Textarea";
 
 interface FormKeluargaProps {
   mode: "tambah" | "edit";
@@ -171,99 +173,72 @@ export default function FormKeluarga({ mode, idKeluarga }: FormKeluargaProps) {
         
         {/* Nomor KK */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-slate-700">
-            Nomor KK <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
+          <Input
+            label="Nomor KK"
             maxLength={16}
-            {...register("nomor_kk")}
-            className={`mt-1 block w-full rounded-lg border p-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 bg-white ${
-              errors.nomor_kk ? "border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-red-500" : "border-slate-300"
-            }`}
+            required
+            {...register('nomor_kk')}
+            error={errors.nomor_kk?.message}
           />
-          {errors.nomor_kk && <span className="text-xs text-red-500 mt-1 font-medium">{errors.nomor_kk.message}</span>}
         </div>
 
         {/* Nama Kepala Keluarga */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-slate-700">
-            Nama Kepala Keluarga <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            {...register("nama_kepala")}
-            className={`mt-1 block w-full rounded-lg border p-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 bg-white ${
-              errors.nama_kepala ? "border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-red-500" : "border-slate-300"
-            }`}
+          <Input
+            label="Nama Kepala Keluarga"
+            required
+            {...register('nama_kepala')}
+            error={errors.nama_kepala?.message}
           />
-          {errors.nama_kepala && <span className="text-xs text-red-500 mt-1 font-medium">{errors.nama_kepala.message}</span>}
         </div>
 
         {/* NIK Kepala Keluarga */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-slate-700">
-            NIK Kepala Keluarga <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            maxLength={16}
-            {...register("nik_kepala")}
-            className={`mt-1 block w-full rounded-lg border p-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 bg-white ${
-              errors.nik_kepala ? "border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-red-500" : "border-slate-300"
-            }`}
-          />
-          {errors.nik_kepala && <span className="text-xs text-red-500 mt-1 font-medium">{errors.nik_kepala.message}</span>}
+          <Input
+              label="NIK Kepala Keluarga"
+              required
+              maxLength={16}
+              {...register('nik_kepala')}
+              error={errors.nik_kepala?.message}
+          />  
         </div>
 
         {/* RT / RW Group */}
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-slate-700">
-              RT <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Input
+              label="RT"
+              required
               placeholder="00"
               maxLength={3}
-              {...register("rt")}
-              className={`mt-1 block w-full rounded-lg border p-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 bg-white ${
-                errors.rt ? "border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-red-500" : "border-slate-300"
-              }`}
+              {...register('rt')}
+              error={errors.rt?.message}
             />
-            {errors.rt && <span className="text-xs text-red-500 mt-1 font-medium">{errors.rt.message}</span>}
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-slate-700">
-              RW <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <Input
+              label="RW"
+              required
               placeholder="00"
               maxLength={3}
-              {...register("rw")}
-              className={`mt-1 block w-full rounded-lg border p-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 bg-white ${
-                errors.rw ? "border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-red-500" : "border-slate-300"
-              }`}
+              {...register('rw')}
+              error={errors.rw?.message}
             />
-            {errors.rw && <span className="text-xs text-red-500 mt-1 font-medium">{errors.rw.message}</span>}
           </div>
         </div>
 
         {/* Alamat Lengkap */}
         <div className="flex flex-col gap-1 md:col-span-2">
-          <label className="text-sm font-semibold text-slate-700">
-            Alamat Lengkap <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            rows={3}
-            {...register("alamat")}
-            className={`mt-1 block w-full rounded-lg border p-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 bg-white ${
-              errors.alamat ? "border-red-500 bg-red-50/50 focus:border-red-500 focus:ring-red-500" : "border-slate-300"
-            }`}
-          />
-          {errors.alamat && <span className="text-xs text-red-500 mt-1 font-medium">{errors.alamat.message}</span>}
+          <div className="md:col-span-2">
+            <Textarea
+              label="Alamat Lengkap"
+              required
+              rows={3}
+              {...register('alamat')}
+              error={errors.alamat?.message}
+            />
+          </div>
         </div>
       </div>
 

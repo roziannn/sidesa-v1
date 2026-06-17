@@ -13,7 +13,7 @@ export default async function EditKeluargaPage({ params }: EditKeluargaPageProps
   const resolvedParams = await params;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Perbarui Data Kartu Keluarga</h1>
         <p className="text-sm text-slate-500 mt-1">Ubah informasi berkas kependudukan di bawah ini. Perubahan akan langsung disinkronkan ke database desa.</p>

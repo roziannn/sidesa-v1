@@ -9,6 +9,8 @@ import DataTable, {
   Column,
 } from '@/components/DataTable';
 import { formatDate } from '@/lib/format';
+import Button from '@components/ui/Button';
+import Link from 'next/link';
 
 type Kegiatan = {
   id: string;
@@ -158,23 +160,7 @@ export default function KegiatanClient({
             </span>
           );
         },
-      },
-      {
-  label: 'Aksi',
-  key: 'id',
-
-  render: (_, row) => (
-    <button
-      onClick={() =>
-        router.push(
-          `/dashboard/kegiatan/${row.id}`
-        )
       }
-    >
-      <Eye className="h-4 w-4" />
-    </button>
-  ),
-}
     ];
 
   const daysInMonth =
@@ -282,19 +268,13 @@ export default function KegiatanClient({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() =>
-              router.push(
-                '/dashboard/kegiatan/tambah'
-              )
-            }
-            className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1 text-sm font-semibold text-white"
-          >
-            <Plus className="h-4 w-4" />
-            Buat Kegiatan
-          </button>
-        </div>
+        <Link href="/dashboard/kegiatan/tambah">
+        <Button
+          leftIcon={<Plus className="h-4 w-4" />}
+        >
+          Buat Kegiatan
+        </Button>
+      </Link>
       </div>
 
         <div className="grid gap-6 xl:grid-cols-5">
@@ -317,6 +297,10 @@ export default function KegiatanClient({
                 <DataTable
                 columns={columns}
                 data={filteredData}
+                onView={(row) =>
+                router.push(
+                  `/dashboard/kegiatan/${row.id}`
+                )}
                 />
             )}
             </div>

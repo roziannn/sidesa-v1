@@ -3,6 +3,7 @@ import { HandHeart, FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import BansosClient from "@/components/bansos/BansosClient";
 import Link from "next/link";
+import Button from "@components/ui/Button";
 
 // Memastikan Next.js selalu mengambil data teranyar langsung dari database (No Cache)
 export const revalidate = 0;
@@ -25,10 +26,14 @@ export default function BansosPage() {
         <div className="shrink-0">
           <Link
             href="/dashboard/bansos/laporan"
-            className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-200 hover:border-slate-300 shadow-sm transition-all cursor-pointer"
           >
-            <FileText className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
-            Lihat Laporan Bansos
+           <Button  variant="primary"
+              leftIcon={
+                  <FileText className="h-4 w-4" />
+                    }
+                    >
+                      Lihat Laporan Bansos
+            </Button>
           </Link>
         </div>
       </div>

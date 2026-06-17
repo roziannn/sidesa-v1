@@ -3,7 +3,7 @@
 
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, CheckCircle, RotateCcw, Trash2, Pencil, Users, Layers, MapPin, ShieldCheck, Clock, CheckSquare, Square, Loader2, ChevronLeft } from "lucide-react";
+import { Search, Plus, CheckCircle, RotateCcw, Trash2,  Users, Layers, MapPin, ShieldCheck, Clock, CheckSquare, Square, Loader2, ChevronLeft, Edit } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import ConfirmModal from "@/components/ConfirmModal";
 import FormPenerimaBansos from "@/components/bansos/FormPenerimaBansos";
@@ -11,6 +11,7 @@ import FormProgram from "@/components/bansos/FormPage";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { formatRupiah } from "@/lib/format";
+import Button from "@components/ui/Button";
 
 interface PenerimaBansos {
   id: string;
@@ -81,9 +82,6 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
     is_aktif: boolean;
   } | null>(null);
 
-  // ----------------------------------------------------------------
-  // LOGIKA AGREGASI STATS BAR
-  // ----------------------------------------------------------------
   const programMap: Record<string, ProgramAgregasi> = {};
   let totalTersalurkan = 0;
   let totalMenunggu = 0;
@@ -345,15 +343,16 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
             <Layers className="w-4 h-4 text-emerald-700" />
             <h3 className="text-sm font-bold text-slate-800 uppercase">Katalog Alokasi Program</h3>
           </div>
-          <button
-            onClick={() => {
-              setSelectedDefaultProgram(filterProgram !== "Semua Program" ? filterProgram : undefined);
-              setIsAddModalOpen(true);
-            }}
-            className="md:mt-4 inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition h-9 self-end md:self-auto cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Tambah Program
-          </button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSelectedProgramData(null); 
+                setIsProgramModalOpen(true);
+              }}
+              leftIcon={<Plus className="h-4 w-4" />}
+            >
+              Tambah Program
+            </Button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -395,7 +394,7 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
                   }}
                   className="p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-50 transition cursor-pointer"
                 >
-                  <Pencil className="w-3.5 h-3.5" />
+                  <Edit className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -489,15 +488,16 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
               </div>
             </div>
           </div>
-          <button
-            onClick={() => {
-              setSelectedDefaultProgram(filterProgram !== "Semua Program" ? filterProgram : undefined);
+          <Button  variant="outline"  onClick={() => {
+               setSelectedDefaultProgram(filterProgram !== "Semua Program" ? filterProgram : undefined);
               setIsAddModalOpen(true);
             }}
-            className="md:mt-4 inline-flex items-center justify-center gap-1.5 bg-[#15803d] hover:bg-[#166534] text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition h-9 self-end md:self-auto cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Tambah Penerima
-          </button>
+              leftIcon={
+                  <Plus className="h-4 w-4" />
+                    }
+                    >
+                      Tambah Penerima
+            </Button>
         </div>
 
         {/* TABEL DATA DENGAN CHECKBOX */}

@@ -138,12 +138,27 @@ export default async function DetailPengaduanPage({
             </div>
           </div>
 
-          <CatatanPetugasForm
-              id={pengaduan.id}
-              initialValue={
-                pengaduan.catatan_petugas ?? ''
-              }
-          />
+          {pengaduan.status === 'Selesai' ||
+            pengaduan.status === 'Ditolak' ? (
+              pengaduan.catatan_petugas && (
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold text-gray-900">
+                    Catatan Petugas
+                  </h3>
+
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-relaxed text-gray-700">
+                    {pengaduan.catatan_petugas}
+                  </div>
+                </div>
+              )
+            ) : (
+              <CatatanPetugasForm
+                id={pengaduan.id}
+                initialValue={
+                  pengaduan.catatan_petugas ?? ''
+                }
+              />
+            )}
         </div>
       </div>
     </div>

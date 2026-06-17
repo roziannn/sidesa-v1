@@ -8,6 +8,7 @@ import { Save, Loader2 } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { keluargaSchema, type KeluargaFormValues } from "@/types/keluarga";
+import Button from "@components/ui/Button";
 
 interface FormKeluargaProps {
   mode: "tambah" | "edit";
@@ -268,32 +269,28 @@ export default function FormKeluarga({ mode, idKeluarga }: FormKeluargaProps) {
 
       {/* ACTION BUTTONS BAR */}
       <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-6">
-        <button
-          type="button"
-          disabled={isSubmitting}
-          onClick={() => router.push("/dashboard/keluarga")}
-          className="px-4 py-2.5 border border-slate-300 hover:border-slate-400 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed bg-white"
-        >
-          Batal
-        </button>
+        <Button
+        type="button"
+        variant="outline"
+        disabled={isSubmitting}
+        onClick={() => router.push('/dashboard/keluarga')}
+      >
+        Batal
+      </Button>
         
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center gap-2 px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-[#15803d] hover:bg-[#166534] focus:outline-none transition disabled:opacity-75 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Menyimpan...</span>
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4" />
-              <span>Simpan Data</span>
-            </>
-          )}
-        </button>
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={isSubmitting}
+        loading={isSubmitting}
+        leftIcon={
+          !isSubmitting && (
+            <Save className="h-4 w-4" />
+          )
+        }
+      >
+        Simpan Data
+      </Button>
       </div>
     </form>
   );

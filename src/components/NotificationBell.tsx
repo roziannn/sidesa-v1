@@ -64,7 +64,7 @@ export default function NotificationBell() {
         <div className="absolute right-0 top-12 w-80 bg-white border border-slate-200 rounded-md shadow-xl z-50 overflow-hidden">
           {/* HEADER */}
           <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-            <p className="text-[11px] font-bold tracking-widest text-slate-500 uppercase">Notifikasi</p>
+            <p className="text-[12px] font-bold text-slate-500 uppercase">Notifikasi</p>
             {unreadCount > 0 && <span className="text-[10px] bg-slate-200 text-slate-700 px-1.5 rounded-sm font-semibold">{unreadCount} Baru</span>}
           </div>
 
@@ -82,7 +82,7 @@ export default function NotificationBell() {
               ))
             ) : (
               <div className="p-6 text-center">
-                <p className="text-xs text-slate-400">Tidak ada notifikasi baru</p>
+                <p className="text-sm text-slate-400">Tidak ada notifikasi baru</p>
               </div>
             )}
           </div>

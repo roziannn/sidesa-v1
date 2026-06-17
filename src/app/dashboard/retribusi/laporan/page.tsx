@@ -7,6 +7,8 @@ import TopCitizensTable from '@/components/retribusi/TopWargaTable';
 import RekapTableClient from '@components/retribusi/Chart/RekapTableChart';
 import IncomeTrendSection from '@components/retribusi/Chart/IncomeTrandChart';
 import LevyBreakdownSection from '@components/retribusi/Chart/LevyBreakdownChart';
+import Link from 'next/link';
+import Button from '@components/ui/Button';
 
 export default async function LaporanPage() {
   // Contoh data rekap (biasanya hasil query ke DB)
@@ -28,15 +30,23 @@ export default async function LaporanPage() {
           <h1 className="text-2xl font-bold text-gray-900">Laporan Keuangan Retribusi</h1>
           <p className="text-gray-500 text-sm">Analisis performa penagihan dan pemasukan warga.</p>
         </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 text-gray-700 shadow-sm transition-all">
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+       <div className="flex items-center gap-2">
+        <Link href="#">
+          <Button
+            variant="outline"
+            leftIcon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+          >
             Export Excel
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium hover:bg-blue-700 text-white shadow-md transition-all">
-            <FileText className="w-4 h-4" />
+          </Button>
+        </Link>
+
+        <Link href="#">
+          <Button
+            leftIcon={<FileText className="w-4 h-4" />}
+          >
             Export Laporan PDF
-          </button>
+          </Button>
+        </Link>
         </div>
       </div>
 

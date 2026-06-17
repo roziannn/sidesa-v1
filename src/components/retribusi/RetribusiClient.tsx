@@ -3,12 +3,13 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Plus, Search, AlertCircle, Eye, HandCoins, Send, Filter, CheckCircle2, FileText, Clock, X, Mail, CoinsIcon } from "lucide-react";
+import { Plus, Search, AlertCircle, Eye, HandCoins, Send, Filter, CheckCircle2, FileText, Clock, X, Mail, CoinsIcon, Link } from "lucide-react";
 import { formatDate, formatRupiah } from "@/lib/format";
 import StatusBadge from "@/components/StatusBadge"; // Pastikan sudah disesuaikan warnanya
 import ConfirmModal from "../ConfirmModal";
 import TombolBayar from "@/components/retribusi/TombolBayar";
 import DataTable, { Column } from "@/components/DataTable";
+import Button from "@components/ui/Button";
 
 export default function RetribusiClient({ initialData }: { initialData: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -283,14 +284,16 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-800">Manajemen Retribusi</h1>
-
-        <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 rounded-lg bg-[#1B4332] px-4 py-2 text-sm font-semibold text-white hover:bg-[#153427]">
-          <Plus className="h-4 w-4" />
-          Buat Tagihan
-        </button>
+          <Button  onClick={() => setIsModalOpen(true)} variant="primary"
+          leftIcon={
+            
+            <Plus className="h-4 w-4" />
+          }
+          >
+            Buat Tagihan
+          </Button>
       </div>
 
-      {/* Summary */}
       <div className="grid grid-cols-4 gap-4">
         {[
           {
@@ -360,14 +363,16 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
         </div>
 
         <div className="flex items-center gap-3">
-          <button 
-            disabled={selectedIds.length === 0} 
-            onClick={() => setIsReminderModalOpen(true)} 
-            className="flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-lg text-white text-sm font-semibold disabled:opacity-50 hover:bg-slate-800 transition-colors"
+          <Button
+            variant="secondary"
+            size="md"
+            disabled={selectedIds.length === 0}
+            onClick={() => setIsReminderModalOpen(true)}
+            leftIcon={<Send className="h-4 w-4" />}
+            className="border-slate-300 font-semibold"
           >
-            <Send className="h-4 w-4" /> 
             Kirim Reminder ({selectedIds.length})
-          </button>
+          </Button>
           <div className="relative">
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
             <input className="pl-9 pr-4 py-2 border rounded-md text-sm w-64 outline-none focus:border-[#1B4332]" placeholder="Cari nama warga..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />

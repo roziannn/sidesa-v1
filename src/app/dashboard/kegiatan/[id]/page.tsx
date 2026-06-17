@@ -5,9 +5,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { supabaseClient } from "@/lib/supabase/client";
-import { Trash2, UserPlus, Printer } from "lucide-react";
+import { Trash2, UserPlus, Printer, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import { formatDate, formatDayDate } from "@/lib/format";
+import Button from "@components/ui/Button";
 
 // Interfaces
 interface Profile {
@@ -157,11 +158,16 @@ export default function DetailKegiatanPage() {
               <h1 className="text-2xl font-bold">{kegiatan.judul}</h1>
               <span className={`px-2 py-0.5 rounded text-xs font-bold ${kegiatan.status === "aktif" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>{kegiatan.status.toUpperCase()}</span>
             </div>
-            {kegiatan.status === "aktif" && (
-              <button onClick={() => setShowCancelModal(true)} className="text-red-600 text-sm hover:underline">
-                Batalkan Kegiatan
-              </button>
-            )}
+            {kegiatan.status === 'aktif' && (
+            <Button
+              variant="danger"
+              size="sm"
+              leftIcon={<XCircle className="h-4 w-4" />}
+              onClick={() => setShowCancelModal(true)}
+            >
+              Batalkan Kegiatan
+            </Button>
+          )}
           </div>
 
           <div className="mt-4">
@@ -202,22 +208,28 @@ export default function DetailKegiatanPage() {
             <h2 className="font-bold text-lg">Peserta Terdaftar ({terdaftar} orang)</h2>
 
             <div className="flex items-center gap-2">
-              {/* TOMBOL CETAK DAFTAR HADIR */}
-              <button onClick={handleCetakDaftarHadir} className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-semibold transition shadow-sm">
-                <Printer className="w-4 h-4" />
-                Cetak Daftar Hadir
-              </button>
-
-              {kegiatan.status.toLowerCase() === "aktif" && (
-                <button
-                  disabled={sisa <= 0}
-                  onClick={() => setShowAddModal(true)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50 disabled:bg-slate-400 font-semibold transition shadow-sm"
+             <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  leftIcon={<Printer className="w-4 h-4" />}
+                  onClick={handleCetakDaftarHadir}
                 >
-                  <UserPlus className="w-4 h-4" />
-                  {sisa <= 0 ? "Kuota Penuh" : "Tambah Peserta"}
-                </button>
-              )}
+                  Cetak Daftar Hadir
+                </Button>
+
+                {kegiatan.status.toLowerCase() === 'aktif' && (
+                  <Button
+                    variant="primary"
+                    disabled={sisa <= 0}
+                    leftIcon={<UserPlus className="w-4 h-4" />}
+                    onClick={() => setShowAddModal(true)}
+                  >
+                    {sisa <= 0
+                      ? 'Kuota Penuh'
+                      : 'Tambah Peserta'}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 

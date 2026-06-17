@@ -160,43 +160,147 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
       </div>
       </aside>
 
+      {isMobileOpen && (
+  <>
+    <div
+      className="fixed inset-0 bg-black/40 z-40 md:hidden"
+      onClick={() => setIsMobileOpen(false)}
+    />
+
+    <aside className="fixed left-0 top-0 h-full w-72 bg-[#0f172a] text-slate-300 z-50 md:hidden flex flex-col">
+      <div className="h-16 flex items-center justify-between px-5 border-b border-[#1e293b]">
+        <div className="flex items-center gap-3">
+          <div className="bg-emerald-600 p-2 rounded-md">
+            <Building2 className="w-5 h-5 text-white" />
+          </div>
+
+          <span className="font-bold text-white">
+            Sistem Desa
+          </span>
+        </div>
+
+        <button
+          onClick={() =>
+            setIsMobileOpen(false)
+          }
+          className="text-slate-400"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="flex flex-col flex-1 overflow-hidden">
+      <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
+        {menuItems.map((item) => (
+          <SidebarItem
+            key={item.href}
+            item={item}
+            pathname={pathname}
+            isActive={isActive}
+          />
+        ))}
+      </nav>
+
+      <div className="p-4">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          <span className="text-sm font-semibold">
+            Keluar
+          </span>
+        </button>
+
+        <div className="mt-4 pt-4">
+          <p className="text-[13px] font-bold text-slate-400">
+            Version v1.0.0
+          </p>
+
+          <p className="text-[12px] text-slate-500 mt-1">
+            © {new Date().getFullYear()} SIDESA
+          </p>
+        </div>
+      </div>
+    </div>
+    </aside>
+  </>
+)}
+
       {/* Konten */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
-          <h2 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-            {getPageTitle()}
-          </h2>
-          <div className="flex items-center gap-4">
-            <NotificationBell />
-            <Link href="/dashboard/profile" className="flex items-center gap-2 pl-4 border-l">
-              <div className="text-right">
-                <p className="text-xs font-bold">{userProfile?.nama_lengkap || "User"}</p>
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6">
+          <div className="flex items-center gap-3">
+          <button
+            onClick={() =>
+              setIsMobileOpen(true)
+            }
+            className="md:hidden p-2 rounded-lg hover:bg-slate-100"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+             <h2 className="font-bold text-slate-800 text-sm md:text-base">
+              {getPageTitle()}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <NotificationBell />
+            </div>
+
+            <Link
+              href="/dashboard/profile"
+              className="flex items-center gap-2 md:gap-3 pl-3 md:pl-4 border-l border-slate-200 hover:bg-slate-50 px-2 md:px-3 py-2 transition-colors rounded-lg"
+            >
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-slate-100 flex items-center justify-center">
+                <User className="w-4 h-4 text-slate-800" />
+              </div>
+
+              <div className="hidden sm:block leading-tight">
+                <p className="text-sm font-semibold text-slate-800">
+                  {userProfile?.nama_lengkap || 'User'}
+                </p>
+                <p className="text-xs text-slate-500">
+                  Administrator
+                </p>
               </div>
             </Link>
-            <button onClick={handleLogout} className="text-slate-400 hover:text-red-600"><LogOut className="w-5 h-5" /></button>
+
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              className="hidden md:flex p-2 rounded-lg hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         </header>
 
-        <div className="px-6 pt-4 text-xs text-slate-400 flex items-center gap-2 flex-wrap">
-          <span>Dashboard</span>
+        <div className="px-4 md:px-6 pt-4 overflow-x-auto">
+        <nav className="flex items-center gap-2 text-xs whitespace-nowrap min-w-max">
+          <span className="text-slate-400">Dashboard</span>
 
           {getBreadcrumbs().map((crumb, index) => (
             <React.Fragment key={index}>
-              <ChevronRight className="w-3 h-3" />
+              <ChevronRight className="w-3 h-3 text-slate-400" />
+
               <span
                 className={
                   index === getBreadcrumbs().length - 1
                     ? 'font-semibold text-slate-700'
-                    : ''
+                    : 'text-slate-400'
                 }
               >
                 {crumb}
               </span>
             </React.Fragment>
           ))}
-        </div>
+        </nav>
+      </div>
 
-        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

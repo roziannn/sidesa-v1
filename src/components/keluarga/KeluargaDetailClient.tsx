@@ -10,6 +10,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { formatDate } from "@/lib/format";
+import Button from "@components/ui/Button";
 
 interface AnggotaKeluarga {
   id: string;
@@ -290,19 +291,31 @@ export default function KeluargaDetailClient({ keluarga }: KeluargaDetailClientP
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => window.print()} className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-lg transition-all shadow-sm cursor-pointer">
-              <Printer className="w-3.5 h-3.5" />
-              Cetak KK
-            </button>
-            <Link href={`/dashboard/keluarga/${keluarga.id}/edit`} className="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-lg transition-all">
-              <Pencil className="w-3.5 h-3.5" />
-              Edit KK
-            </Link>
-            <button onClick={() => setIsKkDeleteOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-semibold text-xs rounded-lg transition-all">
-              <Trash2 className="w-3.5 h-3.5" />
-              Hapus
-            </button>
-          </div>
+        <Button
+          onClick={() => window.print()}
+          variant="primary"
+          leftIcon={<Printer className="w-3.5 h-3.5" />}
+        >
+          Cetak KK
+        </Button>
+
+        <Link href={`/dashboard/keluarga/${keluarga.id}/edit`}>
+          <Button
+            variant="outline"
+            leftIcon={<Pencil className="w-3.5 h-3.5" />}
+          >
+            Edit KK
+          </Button>
+        </Link>
+
+        <Button
+          onClick={() => setIsKkDeleteOpen(true)}
+          variant="danger"
+          leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+        >
+          Hapus
+        </Button>
+      </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3 text-sm">
@@ -338,9 +351,13 @@ export default function KeluargaDetailClient({ keluarga }: KeluargaDetailClientP
       <div className="space-y-4 print:hidden">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-lg font-bold text-slate-900">Anggota Keluarga ({keluarga.anggota?.length || 0} orang)</h3>
-          <button onClick={bukaModalTambah} className="inline-flex items-center gap-1.5 bg-[#15803d] hover:bg-[#166534] text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm cursor-pointer">
-            <Plus className="w-3.5 h-3.5" /> Tambah Anggota
-          </button>
+          <Button
+          onClick={bukaModalTambah}
+          variant="primary"
+          leftIcon={<Plus className="w-3.5 h-3.5" />}
+        >
+          Tambah Anggota
+        </Button>
         </div>
         <DataTable<AnggotaKeluarga>
           columns={columns}

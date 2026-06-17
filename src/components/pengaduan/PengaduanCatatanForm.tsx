@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { supabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/hooks/useToast';
+import Button from '@components/ui/Button';
 
 const catatanSchema = z.object({
   catatan: z
@@ -115,16 +116,15 @@ export default function CatatanPetugasForm({
       </div>
 
       <div className="mt-3 flex justify-end">
-        <button
+        <Button
           type="button"
           onClick={handleSubmit}
+          loading={loading}
           disabled={loading}
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+          // leftIcon={<Send className="h-4 w-4" />}
         >
-          <Send className="h-4 w-4" />
-
-          {loading ? 'Menyimpan...' : 'Simpan Catatan'}
-        </button>
+          Simpan Catatan
+        </Button>
       </div>
     </div>
   );

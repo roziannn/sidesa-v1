@@ -7,8 +7,9 @@ import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import DataTable, { Column } from "@/components/DataTable"; // Sesuaikan path component DataTable kamu
-import { FileText, CheckCircle2, Clock, XCircle, AlertTriangle, Archive, FileCheck, Download, Eye, RefreshCw, AlertCircle } from "lucide-react";
+import { FileText, CheckCircle2, Clock, XCircle, AlertTriangle, Archive, FileCheck, Download, Eye, RefreshCw, AlertCircle, Plus } from "lucide-react";
 import { formatDate } from "@/lib/format";
+import Button from "@components/ui/Button";
 
 // Interface data lokal
 interface Profile {
@@ -466,15 +467,31 @@ export default function SuratClient({ initialSurat }: ClientProps) {
           <p className="text-sm text-slate-500 mt-1">Kelola permohonan surat masuk dan status dokumen warga.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/dashboard/surat/request" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-sm text-sm font-medium transition shadow-sm flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            Buat Surat
-          </Link>
+        <Link
+          href="/dashboard/surat/request"
+        >
+          <Button
+          leftIcon={
+            
+            <Plus className="h-4 w-4" />
+          }
+        >
+          Buat Surat
+        </Button>
+        </Link>
 
-          <Link href="/dashboard/surat/arsip" className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2 rounded-sm text-sm font-semibold flex items-center gap-2 transition shadow-sm">
-            <Archive className="w-4 h-4 text-slate-400" />
-            Lihat Arsip
-          </Link>
+           <Link
+          href="/dashboard/surat/request"
+        >
+          <Button variant="outline"
+          leftIcon={
+            
+            <Archive className="h-4 w-4" />
+          }
+        >
+          Lihat Arsip
+        </Button>
+        </Link>
         </div>
       </div>
 

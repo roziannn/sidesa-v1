@@ -2,7 +2,9 @@
 
 import {
   forwardRef,
+  ReactNode,
   SelectHTMLAttributes,
+  useId,
 } from 'react';
 
 import { ChevronDown } from 'lucide-react';
@@ -13,6 +15,7 @@ interface SelectProps
   label?: string;
   error?: string;
   required?: boolean;
+  leftIcon?: ReactNode;
 }
 
 const Select = forwardRef<
@@ -24,16 +27,24 @@ const Select = forwardRef<
       label,
       error,
       required,
+      leftIcon,
       className,
       children,
+      id,
       ...props
     },
     ref
   ) => {
+    const generatedId = useId();
+    const selectId = id ?? generatedId;
+
     return (
       <div className="space-y-1.5">
         {label && (
-          <label className="block text-sm font-semibold text-slate-700">
+          <label
+            htmlFor={selectId}
+            className="block text-sm font-semibold text-slate-700"
+          >
             {label}
 
             {required && (
@@ -45,12 +56,25 @@ const Select = forwardRef<
         )}
 
         <div className="relative">
+          {leftIcon && (
+            <div className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-500">
+              {leftIcon}
+            </div>
+          )}
+
           <select
+            id={selectId}
             ref={ref}
             className={cn(
-              'w-full appearance-none rounded-lg bg-white px-3 py-2.5 pr-10 text-sm text-slate-900',
+              'w-full appearance-none rounded-lg bg-white text-sm text-slate-900',
 
-              'border-2 transition-all duration-200 ease-out',
+              'border transition-all duration-200 ease-out',
+
+              leftIcon
+                ? 'pl-10 pr-10'
+                : 'px-3 pr-10',
+
+              'py-2',
 
               error
                 ? 'border-red-500'
@@ -70,7 +94,7 @@ const Select = forwardRef<
 
               'focus:outline-none',
 
-              'disabled:bg-slate-100 disabled:cursor-not-allowed',
+              'disabled:cursor-not-allowed disabled:bg-slate-100',
 
               className
             )}
@@ -79,7 +103,18 @@ const Select = forwardRef<
             {children}
           </select>
 
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <ChevronDown
+            className="
+              pointer-events-none
+              absolute
+              right-3
+              top-1/2
+              h-4
+              w-4
+              -translate-y-1/2
+              text-slate-400
+            "
+          />
         </div>
 
         {error && (

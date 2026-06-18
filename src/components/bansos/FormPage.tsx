@@ -6,6 +6,13 @@ import { X, Loader2, Save, FolderHeart, AlertTriangle, HelpCircle } from "lucide
 import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Textarea from "@/components/ui/Textarea";
+import Toggle from "@/components/ui/Toggle";
+import ConfirmModal from "@components/ConfirmModal";
+
 interface ProgramBansosData {
   id?: string; // Digunakan jika ada internal master table id, atau fallback nama lama
   nama_program: string;
@@ -66,7 +73,7 @@ export default function FormProgram({ isOpen, onClose, onSuccess, initialData }:
     }
     setShowWarningModal(false);
   }, [isOpen, isEditMode, initialData]);
-
+  
   // ----------------------------------------------------------------
   // 2. HANDLER FORMAT RUPIAH
   // ----------------------------------------------------------------
@@ -181,140 +188,112 @@ export default function FormProgram({ isOpen, onClose, onSuccess, initialData }:
 
   if (!isOpen) return null;
 
-  return (
-    <>
-      {/* MODAL UTAMA FORM PROGRAM */}
-      <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl w-full max-w-[500px] shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-          {/* HEADER */}
-          <div className="bg-slate-50 border-b border-slate-100 px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2.5 text-emerald-800">
-              <FolderHeart className="w-5 h-5 stroke-[2.25]" />
-              <h3 className="font-bold text-slate-900 text-base">{isEditMode ? "Ubah Master Program" : "Tambah Program Baru"}</h3>
-            </div>
-            <button type="button" onClick={onClose} className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+return (
+  <>
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      size="lg"
+      title={
+        isEditMode
+          ? "Ubah Master Program"
+          : "Tambah Program Baru"
+      }
+      description={
+        isEditMode
+          ? "Perbarui informasi program bantuan sosial."
+          : "Tambahkan program bantuan sosial baru."
+      }
+    >
+      <form
+        onSubmit={handlePreSubmit}
+        className="space-y-5"
+      >
+        <Input
+          label="Nama Program"
+          required
+          placeholder='Contoh: "PKH 2026" atau "BLT Dana Desa"'
+          value={namaProgram}
+          onChange={(e) =>
+            setNamaProgram(
+              e.target.value
+            )
+          }
+        />
 
-          {/* KONTEN FORM */}
-          <form onSubmit={handlePreSubmit} className="p-6 space-y-4 overflow-y-auto">
-            {/* FIELD 1: NAMA PROGRAM */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wide flex items-center gap-1.5">
-                Nama Program <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                placeholder='Contoh: "PKH 2026" atau "BLT Dana Desa"'
-                value={namaProgram}
-                onChange={(e) => setNamaProgram(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition font-medium"
-              />
-            </div>
+        <Textarea
+          label="Deskripsi Program"
+          rows={4}
+          maxLength={300}
+          placeholder="Berikan penjelasan singkat mengenai tujuan, kriteria, atau target sasaran program bantuan."
+          value={deskripsi}
+          onChange={(e) =>
+            setDeskripsi(
+              e.target.value
+            )
+          }
+        />
 
-            {/* FIELD 2: DESKRIPSI PROGRAM */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wide">
-                Deskripsi Program <span className="text-slate-400 font-normal">(Opsional)</span>
-              </label>
-              <textarea
-                rows={3}
-                maxLength={300}
-                placeholder="Berikan penjelasan singkat mengenai tujuan, kriteria, atau target sasaran dari alokasi program bantuan ini..."
-                value={deskripsi}
-                onChange={(e) => setDeskripsi(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition resize-none leading-relaxed"
-              />
-            </div>
+        <Input
+          label="Jumlah Bantuan Standar"
+          placeholder="300.000"
+          value={displayJumlahBantuan}
+          onChange={
+            handleJumlahBantuanChange
+          }
+        />
 
-            {/* FIELD 3: JUMLAH BANTUAN DEFAULT */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wide flex items-center justify-between">
-                <span>Jumlah Bantuan Standar (Default)</span>
-                <span className="text-[10px] text-slate-400 font-normal lowercase italic flex items-center gap-1">
-                  <HelpCircle className="w-3 h-3 inline" /> dapat di-override nanti
-                </span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-sm font-bold text-slate-400">Rp</span>
-                <input
-                  type="text"
-                  placeholder="Masukkan nominal bantuan standar (Contoh: 300.000)"
-                  value={displayJumlahBantuan}
-                  onChange={handleJumlahBantuanChange}
-                  className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition font-mono font-bold"
-                />
-              </div>
-            </div>
-
-            {/* FIELD 4: STATUS AKTIF / NONAKTIF */}
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between mt-2">
-              <div className="space-y-0.5 pr-4">
-                <span className="text-xs font-bold text-slate-700 block uppercase tracking-wide">Status Publikasi</span>
-                <p className="text-slate-500 text-[11px] leading-relaxed">Jika dinonaktifkan, program tidak akan muncul sebagai opsi pilihan saat mengalokasikan penerima baru.</p>
-              </div>
-
-              {/* TOGGLE SWITCH COMPONENT */}
-              <label className="relative inline-flex items-center cursor-pointer select-none flex-shrink-0">
-                <input type="checkbox" checked={isAktif} onChange={(e) => setIsAktif(e.target.checked)} className="sr-only peer" />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                <span className="ml-2 text-xs font-bold text-slate-700 min-w-[50px] text-center">{isAktif ? "Aktif" : "Nonaktif"}</span>
-              </label>
-            </div>
-
-            {/* ACTION BUTTON FOOTER */}
-            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 mt-4">
-              <button type="button" disabled={isSubmitting} onClick={onClose} className="text-xs font-bold text-slate-500 hover:bg-slate-100 px-4 py-2 rounded-xl border border-slate-200 transition cursor-pointer disabled:opacity-50">
-                Batal
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="inline-flex items-center gap-1.5 bg-[#15803d] hover:bg-[#166534] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-md transition cursor-pointer disabled:opacity-50"
-              >
-                {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                {isEditMode ? "Simpan Perubahan" : "Buat Program"}
-              </button>
-            </div>
-          </form>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <Toggle
+            checked={isAktif}
+            onChange={setIsAktif}
+            label="Status Publikasi"
+            description="Jika dinonaktifkan, program tidak akan muncul saat alokasi penerima baru."
+          />
         </div>
-      </div>
 
-      {/* ================================================================ */}
-      {/* MODAL INTERSEPTOR WARNING (CASCADING PERUBAHAN NAMA PROGRAM)     */}
-      {/* ================================================================ */}
-      {showWarningModal && (
-        <div className="fixed inset-0 z-[60] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl w-full max-w-[420px] shadow-2xl border border-amber-200 overflow-hidden flex flex-col animate-in scale-in duration-150">
-            <div className="p-5 space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-amber-50 rounded-lg text-amber-600 flex-shrink-0">
-                  <AlertTriangle className="w-6 h-6 stroke-[2]" />
-                </div>
-                <div className="space-y-1.5">
-                  <h4 className="font-bold text-slate-900 text-sm">Konfirmasi Perubahan Nama</h4>
-                  <p className="text-slate-600 text-xs leading-relaxed">
-                    Mengubah nama program dari <strong className="text-slate-900">"{initialData?.nama_program}"</strong> menjadi <strong className="text-emerald-700">"{namaProgram.trim()}"</strong> akan mempengaruhi{" "}
-                    <span className="font-extrabold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">{countPenerimaTerdampak} data alokasi penerima</span> yang sudah berjalan.
-                  </p>
-                  <p className="text-slate-500 text-[11px] leading-relaxed italic">Data transaksi penerima akan tetap aman di sistem, tetapi kolom pengenal nama programnya akan ikut dimigrasikan secara otomatis. Lanjutkan tindakan ini?</p>
-                </div>
-              </div>
+        <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
+            Batal
+          </Button>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-                <button type="button" onClick={() => setShowWarningModal(false)} className="text-xs font-bold text-slate-500 hover:bg-slate-100 px-3 py-2 rounded-lg border border-slate-200 transition cursor-pointer">
-                  Gagalkan
-                </button>
-                <button type="button" onClick={executeSave} className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm transition cursor-pointer">
-                  Ya, Ubah Secara Kaskade
-                </button>
-              </div>
-            </div>
-          </div>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={isSubmitting}
+            leftIcon={
+              !isSubmitting ? (
+                <Save className="w-4 h-4" />
+              ) : undefined
+            }
+          >
+            {isEditMode
+              ? "Simpan Perubahan"
+              : "Buat Program"}
+          </Button>
         </div>
-      )}
+      </form>
+    </Modal>
+
+   <ConfirmModal
+      isOpen={showWarningModal}
+      title="Konfirmasi Perubahan Nama"
+      message={`Mengubah nama program dari "${
+        initialData?.nama_program ?? ""
+      }" menjadi "${namaProgram.trim()}" akan memperbarui ${countPenerimaTerdampak} data penerima yang sudah terkait dengan program ini. Tindakan ini akan dilakukan secara otomatis ke seluruh data yang terdampak.`}
+      confirmLabel="Ya, Ubah Kaskade"
+      confirmVariant="warning"
+      isLoading={isSubmitting}
+      onCancel={() =>
+        setShowWarningModal(false)
+      }
+      onConfirm={executeSave}
+    />
     </>
   );
 }

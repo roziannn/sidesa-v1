@@ -481,7 +481,7 @@ export default function SuratClient({ initialSurat }: ClientProps) {
         </Link>
 
            <Link
-          href="/dashboard/surat/request"
+          href="/dashboard/surat/arsip"
         >
           <Button variant="outline"
           leftIcon={

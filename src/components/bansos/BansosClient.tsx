@@ -3,7 +3,7 @@
 
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, CheckCircle, RotateCcw, Trash2,  Users, Layers, MapPin, ShieldCheck, Clock, CheckSquare, Square, Loader2, ChevronLeft, Edit } from "lucide-react";
+import { Search, Plus, CheckCircle, RotateCcw, Trash2,  Users, Layers, MapPin, ShieldCheck, Clock, CheckSquare, Square, Loader2, ChevronLeft, Edit, Package, FolderOpen } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import ConfirmModal from "@/components/ConfirmModal";
 import FormPenerimaBansos from "@/components/bansos/FormPenerimaBansos";
@@ -12,6 +12,8 @@ import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { formatRupiah } from "@/lib/format";
 import Button from "@components/ui/Button";
+import Select from "@components/ui/Select";
+import Input from "@components/ui/Input";
 
 interface PenerimaBansos {
   id: string;
@@ -438,54 +440,77 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 text-xs">
-            <div className="flex flex-col gap-1">
-              <span className="font-semibold text-slate-400 text-[12px]">Program Kerja</span>
-              <select
-                value={filterProgram}
-                onChange={(e) => {
-                  setFilterProgram(e.target.value);
-                  setSelectedIds([]);
-                }}
-                className="bg-white border border-slate-300 rounded-lg py-1.5 pl-2 pr-8 font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 min-w-[160px]"
-              >
-                <option value="Semua Program">📁 Semua Program</option>
-                {daftarProgram.map((p) => (
-                  <option key={p.nama} value={p.nama}>
-                    🔹 {p.nama}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="font-semibold text-slate-400 text-[12px]">Status Cair</span>
-              <select
-                value={filterStatus}
-                onChange={(e) => {
-                  setFilterStatus(e.target.value);
-                  setSelectedIds([]);
-                }}
-                className="bg-white border border-slate-300 rounded-lg py-1.5 px-2 font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              >
-                <option value="Semua">📦 Semua Status</option>
-                <option value="Menunggu">⏳ Menunggu</option>
-                <option value="Tersalurkan">✅ Tersalurkan</option>
-              </select>
-            </div>
+            <div className="flex flex-col gap-1 min-w-[180px]">
+
+  <div className="relative">
+   <Select
+    label="Program Kerja"
+    leftIcon={
+      <FolderOpen className="h-4 w-4 text-emerald-600" />
+    }
+    value={filterProgram}
+    onChange={(e) => {
+      setFilterProgram(e.target.value);
+      setSelectedIds([]);
+    }}
+    className="min-w-[180px]"
+  >
+    <option value="Semua Program">
+      Semua Program
+    </option>
+
+    {daftarProgram.map((p) => (
+      <option key={p.nama} value={p.nama}>
+        {p.nama}
+      </option>
+    ))}
+  </Select>
+  </div>
+</div>
+
+    <div className="flex flex-col gap-1 min-w-[180px]">
+      <div className="relative">
+        <Select
+        label="Status Pencairan"
+        leftIcon={
+          <Package className="h-4 w-4 text-emerald-600" />
+        }
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setSelectedIds([]);
+          }}
+          className="pl-9 py-1.5"
+        >
+          <option value="Semua">
+            Semua Status
+          </option>
+
+          <option value="Menunggu">
+            Menunggu
+          </option>
+
+          <option value="Tersalurkan">
+            Tersalurkan
+          </option>
+        </Select>
+      </div>
+    </div>
             <div className="flex flex-col gap-1 w-full sm:w-auto sm:min-w-[240px]">
-              <span className="font-semibold text-slate-400 text-[12px]">Cari Nama Penerima</span>
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Ketik nama warga..."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setSelectedIds([]);
-                  }}
-                  className="w-full bg-white border border-slate-300 rounded-lg py-1.5 pl-8 pr-3 font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs"
-                />
-              </div>
+             <Input
+                label="Cari Nama Penerima"
+                labelClassName="text-[12px] text-slate-400"
+                placeholder="Ketik nama warga..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSelectedIds([]);
+                }}
+                leftIcon={
+                  <Search className="h-4 w-4 text-slate-400" />
+                }
+                className="text-xs font-medium"
+              />
             </div>
           </div>
           <Button  variant="outline"  onClick={() => {

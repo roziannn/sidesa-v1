@@ -7,6 +7,12 @@ import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { Save, Calendar, MapPin, Clock, Users, Info, RefreshCw } from "lucide-react";
 import { formatDate } from "@/lib/format";
+import Card from "@components/ui/Card";
+import Button from "@components/ui/Button";
+import Input from "@components/ui/Input";
+import Select from "@components/ui/Select";
+import Textarea from "@components/ui/Textarea";
+import Toggle from "@components/ui/Toggle";
 
 interface FormKegiatanProps {
   initialData?: {
@@ -146,149 +152,305 @@ export default function FormKegiatan({ initialData, mode }: FormKegiatanProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* FORM SECTION */}
-      <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-          <h2 className="font-bold text-slate-800 text-sm uppercase tracking-widest">{mode === "create" ? "Buat Kegiatan Baru" : "Edit Kegiatan"}</h2>
-        </div>
+    <Card
+      className="lg:col-span-2"
+      title={
+        mode === "create"
+          ? "Buat Kegiatan Baru"
+          : "Edit Kegiatan"
+      }
+      description="Lengkapi informasi kegiatan desa."
+    >
+      <div className="space-y-6">
 
-        <div className="p-6 space-y-6">
-          {/* INFO UTAMA */}
-          <section className="space-y-4">
-            <div>
-              <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">Nama Program *</label>
-              <input
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
-                placeholder='Contoh: "PKH 2026" atau "BLT Dana Desa"'
-                value={judul}
-                onChange={(e) => setJudul(e.target.value)}
+        {/* main info */}
+        <section className="space-y-4">
+          <Input
+            label="Nama Program"
+            required
+            placeholder='Contoh: "PKH 2026" atau "BLT Dana Desa"'
+            value={judul}
+            onChange={(e) =>
+              setJudul(e.target.value)
+            }
+          />
+
+          <Textarea
+            label="Deskripsi"
+            rows={3 }
+            placeholder="Detail kegiatan..."
+            value={deskripsi}
+            onChange={(e) =>
+              setDeskripsi(e.target.value)
+            }
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Tanggal"
+              type="date"
+              value={tanggal}
+              onChange={(e) =>
+                setTanggal(e.target.value)
+              }
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Mulai"
+                type="time"
+                value={waktuMulai}
+                onChange={(e) =>
+                  setWaktuMulai(
+                    e.target.value
+                  )
+                }
+              />
+
+              <Input
+                label="Selesai"
+                type="time"
+                value={waktuSelesai}
+                onChange={(e) =>
+                  setWaktuSelesai(
+                    e.target.value
+                  )
+                }
               />
             </div>
-            <div>
-              <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">Deskripsi</label>
-              <textarea
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none h-24"
-                placeholder="Detail kegiatan..."
-                value={deskripsi}
-                onChange={(e) => setDeskripsi(e.target.value)}
+
+            <Input
+              label="Lokasi"
+              placeholder="Lokasi kegiatan"
+              value={lokasi}
+              onChange={(e) =>
+                setLokasi(e.target.value)
+              }
+            />
+
+            <Input
+              label="Kuota"
+              type="number"
+              placeholder="Opsional"
+              value={kuota}
+              onChange={(e) =>
+                setKuota(
+                  e.target.value === ""
+                    ? ""
+                    : Number(
+                        e.target.value
+                      )
+                )
+              }
+            />
+          </div>
+        </section>
+
+        {/* kegiatan looping */}
+        {mode === "create" && (
+          <Card
+            padding="sm"
+            className="bg-slate-50"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <RefreshCw
+                  className={`w-4 h-4 text-slate-500 ${
+                    isRecurring
+                      ? "animate-spin-slow"
+                      : ""
+                  }`}
+                />
+
+                <span className="text-sm font-semibold text-slate-700">
+                  Kegiatan Berulang
+                </span>
+              </div>
+
+              <Toggle
+                checked={isRecurring}
+                onChange={setIsRecurring}
+                label="Kegiatan Berulang"
+                description="Buat beberapa kegiatan sekaligus berdasarkan frekuensi."
               />
             </div>
-          </section>
 
-          {/* DETAIL GRID */}
-          <section>
-            <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-3">Detail Kegiatan</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputIcon icon={<Calendar className="w-4 h-4 text-slate-400" />} type="date" value={tanggal} onChange={setTanggal} />
-              <div className="flex gap-2">
-                <InputIcon icon={<Clock className="w-4 h-4 text-slate-400" />} type="time" value={waktuMulai} onChange={setWaktuMulai} />
-                <InputIcon icon={<Clock className="w-4 h-4 text-slate-400" />} type="time" value={waktuSelesai} onChange={setWaktuSelesai} />
+            {isRecurring && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <Select
+                  label="Frekuensi"
+                  value={frequency}
+                  onChange={(e) =>
+                    setFrequency(
+                      e.target.value as any
+                    )
+                  }
+                >
+                  <option value="weekly">
+                    Mingguan
+                  </option>
+
+                  <option value="biweekly">
+                    Dua Mingguan
+                  </option>
+
+                  <option value="monthly">
+                    Bulanan
+                  </option>
+                </Select>
+
+                <Input
+                  label="Jumlah Pengulangan"
+                  type="number"
+                  min={2}
+                  max={12}
+                  value={repeatCount}
+                  onChange={(e) =>
+                    setRepeatCount(
+                      Math.min(
+                        12,
+                        Math.max(
+                          2,
+                          Number(
+                            e.target.value
+                          )
+                        )
+                      )
+                    )
+                  }
+                />
               </div>
-              <InputIcon icon={<MapPin className="w-4 h-4 text-slate-400" />} placeholder="Lokasi kegiatan" value={lokasi} onChange={setLokasi} />
-              <InputIcon icon={<Users className="w-4 h-4 text-slate-400" />} type="number" placeholder="Kuota (Opsional)" value={kuota} onChange={setKuota} />
-            </div>
-          </section>
+            )}
+          </Card>
+        )}
 
-          {/* SECTION KEGIATAN BERULANG (Hanya muncul saat mode create) */}
-          {mode === "create" && (
-            <section className="p-4 bg-slate-50/70 rounded-xl border border-slate-200 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <RefreshCw className={`w-4 h-4 text-slate-500 ${isRecurring ? "animate-spin-slow" : ""}`} />
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Kegiatan Berulang</span>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" checked={isRecurring} onChange={(e) => setIsRecurring(e.target.checked)} className="sr-only peer" />
-                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-                </label>
-              </div>
+        {/* status */}
+        <Card
+          padding="sm"
+          className="bg-slate-50"
+        >
+          <div className="flex items-center gap-6">
+            <span className="text-sm font-semibold text-slate-600">
+              Status
+            </span>
 
-              {isRecurring && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-200/60 animate-in fade-in duration-200">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Frekuensi Pengulangan</label>
-                    <select value={frequency} onChange={(e) => setFrequency(e.target.value as any)} className="w-full border border-slate-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-emerald-500">
-                      <option value="weekly">Mingguan (Setiap Minggu)</option>
-                      <option value="biweekly">Dua Mingguan (2 Minggu Sekali)</option>
-                      <option value="monthly">Bulanan (Setiap Bulan)</option>
-                    </select>
-                  </div>
+            {(
+              [
+                "aktif",
+                "nonaktif",
+              ] as const
+            ).map((s) => (
+              <label
+                key={s}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  checked={
+                    status === s
+                  }
+                  onChange={() =>
+                    setStatus(s)
+                  }
+                  className="accent-emerald-600"
+                />
 
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Jumlah Pengulangan (Maks. 12)</label>
-                    <input
-                      type="number"
-                      min={2}
-                      max={12}
-                      value={repeatCount}
-                      onChange={(e) => setRepeatCount(Math.min(12, Math.max(2, Number(e.target.value))))}
-                      className="w-full border border-slate-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* STATUS */}
-          <section className="flex items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <span className="text-[11px] font-bold text-slate-500 uppercase">Status:</span>
-            {(["aktif", "nonaktif"] as const).map((s) => (
-              <label key={s} className="flex items-center gap-2 cursor-pointer text-sm font-medium capitalize">
-                <input type="radio" checked={status === s} onChange={() => setStatus(s)} className="accent-emerald-600" />
-                {s}
+                <span className="capitalize">
+                  {s}
+                </span>
               </label>
             ))}
-          </section>
+          </div>
+        </Card>
 
-          <button
+          <Button
+            variant="primary"
+            fullWidth
+            loading={loading}
+            disabled={!isValid}
             onClick={handleSubmit}
-            disabled={!isValid || loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
+            leftIcon={
+              !loading ? (
+                <Save className="w-4 h-4" />
+              ) : undefined
+            }
           >
-            <Save className="w-4 h-4" /> {loading ? "Menyimpan..." : mode === "create" && isRecurring ? "Simpan Semua Kegiatan" : "Simpan Perubahan"}
-          </button>
+            {mode === "create" &&
+            isRecurring
+              ? "Simpan Semua Kegiatan"
+              : "Simpan Perubahan"}
+          </Button>
         </div>
-      </div>
+      </Card>
 
-      {/* PREVIEW SIDEBAR */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 h-fit sticky top-6 space-y-4">
-        <div className="flex items-center gap-2 text-slate-400">
-          <Info className="w-4 h-4" />
-          <span className="text-[10px] font-bold uppercase tracking-widest">Preview</span>
-        </div>
-
+      {/* preview */}
+      <Card
+          className="h-fit sticky top-6"
+          title="Preview Kegiatan"
+          description="Ringkasan informasi kegiatan yang akan disimpan."
+        >
         <div className="space-y-4">
-          <p className="font-bold text-slate-800 text-lg leading-snug">{judul || "Nama Program"}</p>
-          <div className="space-y-2 text-sm text-slate-600">
-            <p>📅 {tanggal ? formatDate(new Date()) : "Tanggal belum dipilih"}</p>
+          <p className="font-bold text-slate-800 text-lg leading-snug">
+          Nama Kegiatan: {judul || "Nama Program"}
+          </p>
+
+          <div className="space-y-2 text-md text-slate-600">
+            <p>
+              📅{" "}
+              {tanggal
+                ? formatDate(new Date(tanggal))
+                : "Tanggal belum dipilih"}
+            </p>
+
             <p>
               ⏰ {waktuMulai || "--"} - {waktuSelesai || "--"}
             </p>
-            <p>📍 {lokasi || "Lokasi belum ditentukan"}</p>
+
+            <p>
+              📍 {lokasi || "Lokasi belum ditentukan"}
+            </p>
           </div>
+
           {kuota && (
-            <div className="pt-3 border-t border-dashed">
-              <span className="text-xs font-bold bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg">Kuota: {kuota} Orang</span>
+            <div className="pt-3 border-t border-dashed border-slate-200">
+              <span className="inline-flex items-center rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
+                Kuota: {kuota} Orang
+              </span>
             </div>
           )}
         </div>
 
-        {/* PREVIEW DAFTAR TANGGAL RECURRING */}
-        {isRecurring && recurringDates.length > 0 && (
-          <div className="pt-4 border-t-2 border-slate-100 space-y-2 animate-in fade-in duration-200">
-            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded uppercase tracking-wider block w-fit">Akan Membuat {recurringDates.length} Kegiatan</span>
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 max-h-40 overflow-y-auto space-y-1.5 text-xs text-slate-600 font-medium">
-              {recurringDates.map((dateStr, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <span className="text-slate-400 text-[10px]">#{index + 1}</span>
-                  <span>{formatDate(new Date())}</span>
-                </div>
-              ))}
+        {isRecurring &&
+          recurringDates.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
+              <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                Akan Membuat{" "}
+                {recurringDates.length} Kegiatan
+              </span>
+
+              <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-2">
+                {recurringDates.map(
+                  (dateStr, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 text-xs text-slate-600"
+                    >
+                      <span className="w-6 text-slate-400">
+                        #{index + 1}
+                      </span>
+
+                      <span>
+                        {formatDate(
+                          new Date(dateStr)
+                        )}
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+      </Card>
     </div>
   );
 }

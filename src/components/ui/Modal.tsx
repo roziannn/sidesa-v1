@@ -57,20 +57,22 @@ export default function Modal({
   }[size];
 
   return (
+    <>
     <div className="fixed inset-0 z-50">
       <div
-        className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+       className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] animate-modal-backdrop"
         onClick={onClose}
       />
-
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div
-          className={cn(
-            'w-full bg-white rounded-xl border border-slate-200 shadow-xl',
-            'max-h-[90vh] overflow-hidden',
-            widthClass
-          )}
-        >
+            className={cn(
+              'w-full bg-white rounded-xl border border-slate-200',
+              'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)]',
+              'max-h-[90vh] overflow-hidden',
+              'animate-modal-content',
+              widthClass
+            )}
+          >
           {/* Header */}
           <div className="flex items-start justify-between border-b border-slate-100 px-6 py-4">
             <div>
@@ -107,5 +109,38 @@ export default function Modal({
         </div>
       </div>
     </div>
+      
+    <style jsx global>{`
+      @keyframes modalBackdropIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes modalContentIn {
+        from {
+          opacity: 0;
+          transform: translateY(12px) scale(0.96);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .animate-modal-backdrop {
+        animation: modalBackdropIn 0.2s ease-out forwards;
+      }
+
+      .animate-modal-content {
+        animation: modalContentIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)
+          forwards;
+      }
+    `}</style>
+  </>
   );
 }
+

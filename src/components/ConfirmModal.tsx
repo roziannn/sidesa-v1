@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { TriangleAlert, Loader2 } from "lucide-react";
+import Button from "./ui/Button";
 
 // 1. Interface Props Sesuai Spesifikasi Pemintaan
 interface ConfirmModalProps {
@@ -142,34 +143,32 @@ export default function ConfirmModal({
           </p>
         </div>
 
-        {/* TOMBOL AKSI (Batal di kiri, Konfirmasi di kanan) */}
         <div className="flex items-center gap-3 mt-6">
-          <button
+          <Button
             type="button"
-            disabled={isLoading}
+            variant="outline"
+            fullWidth
             onClick={onCancel}
-            className="flex-1 px-4 py-2 border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
           >
             Batal
-          </button>
-          
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={onConfirm}
-            className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-75 disabled:cursor-not-allowed ${currentVariant.button}`}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Memproses...</span>
-              </>
-            ) : (
-              confirmLabel
-            )}
-          </button>
-        </div>
+          </Button>
 
+          <Button
+            type="button"
+            variant="danger"
+            fullWidth
+            loading={isLoading}
+            onClick={onConfirm}
+            leftIcon={
+              isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : undefined
+            }
+          >
+            {confirmLabel}
+          </Button>
+        </div>
       </div>
 
       {/* Tambahan Style Animasi Murni Menggunakan Tag Style bawaan (Alternatif jika tailwind.config belum diatur) */}

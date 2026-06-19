@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { formatRupiah } from "@/lib/format";
 import { useToast } from "@/hooks/useToast";
 import { Loader2, CreditCard } from "lucide-react";
+import Button from "@components/ui/Button";
 
 // Deklarasi Global untuk Midtrans Snap
 declare global {
@@ -28,7 +29,6 @@ export default function TombolBayar({ retribusiId, jumlah, namaWarga, onSuccess,
   const { showToast } = useToast();
 
   useEffect(() => {
-    // Memuat skrip Midtrans secara dinamis
     const snapSrc = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === "true" ? "https://app.midtrans.com/snap/snap.js" : "https://app.sandbox.midtrans.com/snap/snap.js";
 
     const script = document.createElement("script");
@@ -79,23 +79,14 @@ export default function TombolBayar({ retribusiId, jumlah, namaWarga, onSuccess,
   };
 
   return (
-    <button
+   <Button
+      variant="warning" 
+      size="xs"
+      loading={loading}
+      leftIcon={<CreditCard className="w-3 h-3" />}
       onClick={handlePay}
-      disabled={loading}
-      // Ganti w-full jadi w-fit, tambahkan padding horizontal yang pas
-      className="w-fit flex items-center justify-center gap-1.5 bg-yellow-500 hover:bg-yellow-600 text-yellow-950 px-3 py-1.5 rounded text-xs font-semibold transition shadow-sm disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap mx-auto"
     >
-      {loading ? (
-        <>
-          <Loader2 className="w-3 h-3 animate-spin" />
-          Memproses...
-        </>
-      ) : (
-        <>
-          <CreditCard className="w-3 h-3" />
-          Bayar Online
-        </>
-      )}
-    </button>
+      Bayar Online
+    </Button>
   );
 }

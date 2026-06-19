@@ -10,6 +10,8 @@ import DataTable, { Column } from "@/components/DataTable"; // Sesuaikan path co
 import { FileText, CheckCircle2, Clock, XCircle, AlertTriangle, Archive, FileCheck, Download, Eye, RefreshCw, AlertCircle, Plus } from "lucide-react";
 import { formatDate } from "@/lib/format";
 import Button from "@components/ui/Button";
+import Modal from "@components/ui/Modal";
+import Textarea from "@components/ui/Textarea";
 
 // Interface data lokal
 interface Profile {
@@ -524,46 +526,70 @@ export default function SuratClient({ initialSurat }: ClientProps) {
 
       <DataTable columns={columns} data={filteredSurat} isLoading={loadingId === "fetch-awal"} />
 
-      {/* ================= MODAL TOLAK SURAT ================= */}
-      {modalTolak.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-xl border border-slate-100 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-2 text-red-600 mb-3">
-              <XCircle className="w-5 h-5" />
-              <h3 className="font-extrabold text-base uppercase tracking-wider">Tolak Permohonan Surat</h3>
-            </div>
-            <p className="text-slate-500 text-xs mb-4 leading-normal">Berikan alasan penolakan yang objektif dan jelas. Pemohon akan menerima catatan ini di lembar konfirmasi mandiri mereka.</p>
+     <Modal
+        open={modalTolak.isOpen}
+        onClose={() => {
+          setModalTolak({
+            isOpen: false,
+            suratId: null,
+          });
+          setAlasanTolak('');
+        }}
+        title="Tolak Permohonan Surat"
+        description="Berikan alasan menolak surat"
+      >
+        <p className="text-slate-500 text-xs mb-4">
+          Berikan alasan penolakan yang objektif dan jelas.
+        </p>
 
-            <textarea
-              required
-              rows={4}
-              placeholder="Jelaskan alasan surat tidak bisa diproses... (Contoh: NIK tidak terdaftar atau berkas pendukung RT kurang lengkap)"
-              className="w-full border border-slate-200 p-3 rounded-xl text-sm bg-slate-50 outline-none focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-500/10 transition-all resize-none"
-              value={alasanTolak}
-              onChange={(e) => setAlasanTolak(e.target.value)}
-            />
+        <Textarea
+          rows={4}
+          value={alasanTolak}
+          onChange={(e) =>
+            setAlasanTolak(e.target.value)
+          }
+          placeholder="Jelaskan alasan surat tidak bisa diproses..."
+        />
 
-            <div className="flex justify-between items-center mt-2">
-              <span className={`text-[11px] font-bold ${alasanTolak.length >= 20 ? "text-emerald-600" : "text-slate-400"}`}>{alasanTolak.length} / Minimal 20 Karakter</span>
-            </div>
-
-            <div className="flex gap-2.5 mt-5">
-              <button
-                onClick={() => {
-                  setModalTolak({ isOpen: false, suratId: null });
-                  setAlasanTolak("");
-                }}
-                className="flex-1 border border-slate-200 hover:bg-slate-50 py-2.5 rounded-xl text-xs font-bold transition text-slate-600"
-              >
-                Batal
-              </button>
-              <button onClick={handleKirimPenolakan} disabled={alasanTolak.trim().length < 20} className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
-                Kirim Penolakan
-              </button>
-            </div>
-          </div>
+        <div className="flex justify-between mt-2">
+          <span
+            className={`text-[11px] font-bold ${
+              alasanTolak.length >= 20
+                ? 'text-emerald-600'
+                : 'text-slate-400'
+            }`}
+          >
+            {alasanTolak.length} / Minimal 20 Karakter
+          </span>
         </div>
-      )}
+
+        <div className="mt-5 flex gap-2">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => {
+              setModalTolak({
+                isOpen: false,
+                suratId: null,
+              });
+              setAlasanTolak('');
+            }}
+          >
+            Batal
+          </Button>
+
+          <Button
+            variant="danger"
+            className="flex-1"
+            onClick={handleKirimPenolakan}
+            disabled={
+              alasanTolak.trim().length < 20
+            }
+          >
+            Kirim Penolakan
+          </Button>
+        </div>
+      </Modal>
 
       {/* ================= MODAL LIHAT ALASAN ================= */}
       {modalAlasan.isOpen && (

@@ -8,6 +8,7 @@ import DataTable, { Column } from "@/components/DataTable";
 import ConfirmModal from "@/components/ConfirmModal";
 import { supabaseClient } from "@/lib/supabase/client";
 import Button from "@components/ui/Button";
+import Input from "@components/ui/Input";
 
 interface KeluargaData {
   id: string;
@@ -111,16 +112,13 @@ export default function KeluargaClient({ initialData, totalKK }: KeluargaClientP
         </Link>
       </div>
 
-      <div className="relative w-full sm:max-w-md">
-        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-          <Search className="w-4 h-4" />
-        </div>
-        <input
+      <div className="relative w-80 sm:max-w-md">
+        <Input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Cari nama kepala keluarga atau nomor KK..."
-          className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition"
+          leftIcon={<Search className="w-4 h-4 text-slate-400" />}
         />
       </div>
 

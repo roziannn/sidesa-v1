@@ -3,13 +3,16 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Plus, Search, AlertCircle, Eye, HandCoins, Send, Filter, CheckCircle2, FileText, Clock, X, Mail, CoinsIcon, Link } from "lucide-react";
+import { Plus, Search, AlertCircle, Eye,  Send, CheckCircle2, FileText, Clock, X, CoinsIcon, Package, FolderOpen, Receipt } from "lucide-react";
 import { formatDate, formatRupiah } from "@/lib/format";
 import StatusBadge from "@/components/StatusBadge"; // Pastikan sudah disesuaikan warnanya
 import ConfirmModal from "../ConfirmModal";
 import TombolBayar from "@/components/retribusi/TombolBayar";
 import DataTable, { Column } from "@/components/DataTable";
 import Button from "@components/ui/Button";
+import Input from "@components/ui/Input";
+import Select from "@components/ui/Select";
+import Modal from "@components/ui/Modal";
 
 export default function RetribusiClient({ initialData }: { initialData: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -244,24 +247,26 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
   render: (_, item: any) => (
     <div className="flex justify-start items-center gap-1.5 flex-nowrap">
       {item.displayStatus === "lunas" ? (
-        <button className="flex items-center justify-center h-[28px] px-3 border border-slate-300 rounded text-slate-600 hover:bg-slate-100 text-xs font-medium transition-all">
-          <Eye className="h-3 w-3 mr-1.5" /> Bukti
-        </button>
+        <Button 
+          variant="outline" 
+          size="xs" 
+          leftIcon={<FileText className="h-3 w-3" />}
+        >
+          Bukti
+        </Button>
       ) : (
         <>
-          <button
-            onClick={() => {
-              setSelectedTagihan(item);
-              setIsPayModalOpen(true);
-            }}
-            className={`flex items-center justify-center h-[30px] px-3 rounded text-xs font-semibold border transition-all shadow-sm ${
-              item.displayStatus === "jatuh_tempo" 
-                ? "bg-red-500 hover:bg-red-600 text-white border-red-600" 
-                : "bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300"
-            }`}
-          >
-          <CoinsIcon className="w-3 h-3 me-1"/>  Bayar Manual
-          </button>
+         <Button
+          size="xs" 
+          variant={item.displayStatus === "jatuh_tempo" ? "danger" : "outline"}
+          leftIcon={<CoinsIcon className="w-3 h-3" />}
+          onClick={() => {
+            setSelectedTagihan(item);
+            setIsPayModalOpen(true);
+          }}
+        >
+          Bayar Manual
+        </Button>
           
           {/* Pastikan TombolBayar di dalam memiliki height h-[30px] dan font-size text-xs */}
           <div className="h-[30px]">
@@ -329,35 +334,45 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
       </div>
 
       {/* 2. FILTER BAR */}
-      {/* 2. FILTER BAR */}
       <div className="bg-white p-4 rounded-lg flex items-center justify-between shadow-sm">
-        {/* Bagian Kiri: Dropdowns */}
-        <div className="flex gap-2 flex-wrap">
-          <select className="border-slate-200 text-sm rounded-md px-3 py-2 border outline-none" onChange={(e) => setFilterJenis(e.target.value)}>
-            <option value="Semua">Semua Program</option>
-            {[...new Set(data.map((i) => i.jenis))].map((j) => (
-              <option key={j} value={j}>
-                {j}
-              </option>
-            ))}
-          </select>
+          <div className="flex gap-2 flex-wrap">
+          <Select 
+          leftIcon={<FolderOpen className="w-4 h-4 text-emerald-600" />}
+          className="w-48"
+          
+          onChange={(e) => setFilterJenis(e.target.value)}
+        >
+          <option value="Semua">Semua Program</option>
+          {[...new Set(data.map((i) => i.jenis))].map((j) => (
+            <option key={j} value={j}>
+              {j}
+            </option>
+          ))}
+        </Select>
 
-          <select className="border-slate-200 text-sm rounded-md px-3 py-2 border outline-none" onChange={(e) => setFilterStatus(e.target.value)}>
-            <option value="Semua">Semua Status</option>
-            <option value="lunas">Lunas</option>
-            <option value="belum_bayar">Belum Bayar</option>
-            <option value="jatuh_tempo">Jatuh Tempo</option>
-          </select>
+        {/* Select Filter Status */}
+        <Select 
+          className="w-48"
+          leftIcon={<Package className="w-4 h-4 text-emerald-600" />}
+          onChange={(e) => setFilterStatus(e.target.value)}
+        >
+          <option value="Semua">Semua Status</option>
+          <option value="lunas">Lunas</option>
+          <option value="belum_bayar">Belum Bayar</option>
+          <option value="jatuh_tempo">Jatuh Tempo</option>
+        </Select>
 
-          {/* Input Bulan/Tahun yang Berfungsi */}
-          <input
+          {/* input bulan/tahun yg berfungsi */}
+          <Input
             type="month"
-            className="border-slate-200 text-sm rounded-md px-3 py-2 border outline-none"
             defaultValue={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`}
             onChange={(e) => {
-              const [tahun, bulan] = e.target.value.split("-");
+              const value = e.target.value;
+              if (!value) return;
+              
+              const [tahun, bulan] = value.split("-");
               setFilterTahun(tahun);
-              setFilterBulan((parseInt(bulan) - 1).toString()); // Kurangi 1 karena JS Month dimulai dari 0
+              setFilterBulan((parseInt(bulan) - 1).toString());
             }}
           />
         </div>
@@ -374,8 +389,13 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
             Kirim Reminder ({selectedIds.length})
           </Button>
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-            <input className="pl-9 pr-4 py-2 border rounded-md text-sm w-64 outline-none focus:border-[#1B4332]" placeholder="Cari nama warga..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <Input
+              className="w-64"
+              placeholder="Cari nama warga..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              leftIcon={<Search className="w-4 h-4" />}
+            />  
           </div>
         </div>
       </div>
@@ -410,111 +430,75 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
       />
 
       {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-              <div className="flex items-center gap-2 text-[#1B4332]">
-                <Plus className="h-5 w-5" />
-                <h2 className="text-lg font-bold">Alokasi Retribusi Baru</h2>
-              </div>
+      
+       <Modal
+      open={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      title="Alokasi Retribusi Baru"
+      description="Tambah retribusi baru"
+      size="md"
+    >
+      <div className="space-y-5">
+        <Input
+          label="Pilih Warga"
+          required
+          leftIcon={<Search className="w-4 h-4" />}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Cari nama warga..."
+        />
 
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Select
+            label="Jenis Retribusi"
+            required
+            onChange={(e) => setJenis(e.target.value)}
+          >
+            <option value="Sampah">Sampah</option>
+            <option value="Pasar">Pasar</option>
+            <option value="Lainnya">Lainnya</option>
+          </Select>
 
-            {/* Body */}
-            <div className="space-y-5 p-6">
-              {/* Warga */}
-              <div>
-                <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-slate-500">PILIH WARGA *</label>
-
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-
-                  <input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="— Cari Nama Warga —"
-                    className="w-full rounded-lg border border-slate-200 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-[#1B4332]"
-                  />
-
-                  {isSearching && <div className="absolute right-3 top-3 text-[10px] text-slate-400">Mencari...</div>}
-                </div>
-
-                {wargaOptions.length > 0 && (
-                  <div className="absolute z-50 mt-1 max-h-48 w-full max-w-[400px] overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-xl">
-                    {wargaOptions.map((w) => (
-                      <button
-                        key={w.id}
-                        type="button"
-                        className="w-full border-b p-3 text-left hover:bg-slate-50 last:border-none"
-                        onClick={() => {
-                          setSelectedWarga(w);
-                          setWargaOptions([]);
-                          setSearchQuery(w.nama);
-                        }}
-                      >
-                        <div className="text-sm font-semibold text-[#1B4332]">{w.nama}</div>
-
-                        <div className="text-[10px] text-slate-400">
-                          RT {w.rt} / RW {w.rw}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Jenis & Jumlah */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-slate-500">JENIS RETRIBUSI *</label>
-
-                  <select value={jenis} onChange={(e) => setJenis(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#1B4332]">
-                    <option value="Sampah">Sampah</option>
-                    <option value="Pasar">Pasar</option>
-                    <option value="Lainnya">Lainnya</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-slate-500">JUMLAH (RP) *</label>
-
-                  <input value={jumlah} onChange={(e) => setJumlah(formatRupiah(e.target.value))} placeholder="Rp 0" className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm" />
-                </div>
-              </div>
-
-              {/* Jatuh Tempo */}
-              <div>
-                <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-slate-500">JATUH TEMPO *</label>
-
-                <input type="date" value={jatuhTempo} onChange={(e) => setJatuhTempo(e.target.value)} className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm text-slate-600" />
-              </div>
-
-              {/* Catatan */}
-              <div>
-                <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-slate-500">CATATAN TAMBAHAN</label>
-
-                <textarea placeholder="Catatan khusus (opsional)" className="h-24 w-full resize-none rounded-lg border border-slate-200 px-4 py-3 text-sm" />
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex justify-end gap-3 bg-slate-50 px-6 py-4">
-              <button onClick={() => setIsModalOpen(false)} className="rounded-lg border border-slate-200 px-6 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100">
-                Batal
-              </button>
-
-              <button onClick={handleSimpanTagihan} disabled={isSaving} className="flex items-center gap-2 rounded-lg bg-[#1B4332] px-6 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-[#153427] disabled:opacity-50">
-                {isSaving ? "Menyimpan..." : "Simpan Tagihan"}
-              </button>
-            </div>
-          </div>
+          <Input
+            label="Jumlah (Rp)"
+            required
+            value={jumlah}
+            onChange={(e) => setJumlah(formatRupiah(e.target.value))}
+            placeholder="Rp 0"
+          />
         </div>
-      )}
+
+        {/* Jatuh Tempo */}
+        <Input
+          label="Jatuh Tempo"
+          type="date"
+          required
+          value={jatuhTempo}
+          onChange={(e) => setJatuhTempo(e.target.value)}
+        />
+
+        {/* Catatan */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-semibold text-slate-700">
+            CATATAN TAMBAHAN
+          </label>
+          <textarea
+            className="w-full rounded-lg border border-slate-300 p-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            placeholder="Catatan khusus (opsional)"
+            rows={3}
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+        <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+          Batal
+        </Button>
+        <Button onClick={handleSimpanTagihan} loading={isSaving}>
+          Simpan Tagihan
+        </Button>
+      </div>
+    </Modal>
     </div>
   );
 }

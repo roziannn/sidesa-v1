@@ -9,6 +9,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import { supabaseClient } from "@/lib/supabase/client";
 import Button from "@components/ui/Button";
 import Input from "@components/ui/Input";
+import StatusBadge from "@components/StatusBadge";
 
 interface KeluargaData {
   id: string;
@@ -54,9 +55,7 @@ export default function KeluargaClient({ initialData, totalKK }: KeluargaClientP
       key: "jumlah_anggota",
       label: "Anggota",
       render: (value: unknown) => (
-        <span className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full font-semibold text-xs">
-          {Number(value ?? 0)} Jiwa
-        </span>
+        <StatusBadge status={`${Number(value ?? 0)} Jiwa`} />
       ),
     },
   ];

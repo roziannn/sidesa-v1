@@ -2,11 +2,12 @@
 
 import { ButtonHTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
   variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'warning';
-  size?: 'xs' | 'sm' | 'md' | 'lg'; // Menambahkan xs di sini
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'icon'; // Menambahkan xs di sini
   loading?: boolean;
   leftIcon?: ReactNode;
   fullWidth?: boolean;
@@ -35,6 +36,7 @@ export default function Button({
         size === 'sm' && 'px-3 py-2 text-sm rounded-lg',
         size === 'md' && 'px-4 py-2.5 text-sm rounded-lg',
         size === 'lg' && 'px-5 py-3 text-base rounded-xl',
+        size === 'icon' && 'h-5 w-5 p-0 rounded-lg',
 
         variant === 'primary' && 'bg-emerald-600 text-white hover:bg-emerald-700',
         variant === 'secondary' && 'bg-slate-100 text-slate-700 hover:bg-slate-200',
@@ -47,7 +49,10 @@ export default function Button({
       )}
       {...props}
     >
-      {leftIcon}
+      {leftIcon && !loading && leftIcon}
+      
+      {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+      
       {loading ? 'Memproses...' : children}
     </button>
   );

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Eye, Pencil, Trash2, Database, ChevronLeft, ChevronRight, Edit2, Edit } from "lucide-react";
+import Button from "./ui/Button";
 
 export interface Column<T> {
   key: keyof T | string;
@@ -76,10 +77,39 @@ export default function DataTable<T>({ columns, data, isLoading = false, onEdit,
                   })}
                   {hasActions && (
                     <td className="px-4 py-3.5 text-center whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-2">
-                        {onView && <button onClick={() => onView(row)} className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-all"><Eye className="w-3.5 h-3.5" /></button>}
-                        {onEdit && <button onClick={() => onEdit(row)} className="p-1 text-[#15803d] hover:bg-emerald-50 rounded transition-all"><Edit className="w-3.5 h-3.5" /></button>}
-                        {onDelete && <button onClick={() => onDelete(row)} className="p-1 text-red-600 hover:bg-red-50 rounded transition-all"><Trash2 className="w-3.5 h-3.5" /></button>}
+                      <div className="flex items-center justify-center gap-1.5">
+                        {onView && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 border-blue-200 text-blue-600 hover:bg-blue-50"
+                            onClick={() => onView(row)}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                        
+                        {onEdit && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                            onClick={() => onEdit(row)}
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                        
+                        {onDelete && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7 border-red-200 text-red-600 hover:bg-red-50"
+                            onClick={() => onDelete(row)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />  
+                          </Button>
+                        )}
                       </div>
                     </td>
                   )}

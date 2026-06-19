@@ -14,6 +14,7 @@ import { formatRupiah } from "@/lib/format";
 import Button from "@components/ui/Button";
 import Select from "@components/ui/Select";
 import Input from "@components/ui/Input";
+import StatusBadge from "@components/StatusBadge";
 
 interface PenerimaBansos {
   id: string;
@@ -277,13 +278,7 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
       const statusFormatted = statusStr.charAt(0).toUpperCase() + statusStr.slice(1);
 
       return (
-        <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${
-          isSelesai 
-            ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-            : "bg-amber-50 text-amber-700 border-amber-200"
-        }`}>
-          {statusFormatted}
-        </span>
+       <StatusBadge status={isSelesai ? "selesai" : "pending"} />
       );
     },
   },
@@ -294,23 +289,21 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
         const namaWarga = row.profiles?.nama || row.anggota?.nama || "Warga";
         return (
           <div className="flex items-center gap-1.5">
-            {row.status === "pending" ? (
-              <button
-                onClick={() => handleUpdateStatusTunggal(row.id, namaWarga, "tersalurkan")}
-                className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-2 py-1 rounded-md shadow-sm transition cursor-pointer"
-              >
-                <CheckCircle className="w-3 h-3" />
-                Salurkan
-              </button>
-            ) : (
-              <button
-                onClick={() => handleUpdateStatusTunggal(row.id, namaWarga, "pending")}
-                className="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-semibold px-2 py-1 rounded-md border border-slate-300 transition cursor-pointer"
-              >
-                <RotateCcw className="w-3 h-3" />
-                Batalkan
-              </button>
-            )}
+            <Button
+              size="xs"
+              variant={row.status === "pending" ? "primary" : "danger"}
+              leftIcon={
+                row.status === "pending" 
+                  ? <CheckCircle className="w-3 h-3" /> 
+                  : <RotateCcw className="w-3 h-3" />
+              }
+              onClick={() => {
+                const nextStatus = row.status === "pending" ? "tersalurkan" : "pending";
+                handleUpdateStatusTunggal(row.id, namaWarga, nextStatus);
+              }}
+            >
+              {row.status === "pending" ? "Salurkan" : "Batalkan"}
+            </Button>
           </div>
         );
       },
@@ -499,7 +492,6 @@ export default function BansosClient({ initialData, daftarWarga }: BansosClientP
             <div className="flex flex-col gap-1 w-full sm:w-auto sm:min-w-[240px]">
              <Input
                 label="Cari Nama Penerima"
-                labelClassName="text-[12px] text-slate-400"
                 placeholder="Ketik nama warga..."
                 value={searchQuery}
                 onChange={(e) => {

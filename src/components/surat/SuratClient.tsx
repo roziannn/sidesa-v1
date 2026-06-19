@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import DataTable, { Column } from "@/components/DataTable"; // Sesuaikan path component DataTable kamu
-import { FileText, CheckCircle2, Clock, XCircle, AlertTriangle, Archive, FileCheck, Download, Eye, RefreshCw, AlertCircle, Plus } from "lucide-react";
+import { FileText, CheckCircle2, Clock, XCircle, AlertTriangle, Archive, FileCheck, Download, Eye, RefreshCw, AlertCircle, Plus, CircleX } from "lucide-react";
 import { formatDate } from "@/lib/format";
 import Button from "@components/ui/Button";
 import Modal from "@components/ui/Modal";
@@ -367,89 +367,63 @@ export default function SuratClient({ initialSurat }: ClientProps) {
           const isRowLoading = loadingId === row.id;
 
           return (
-            <div className={`${getHighlightClass(row)} flex items-center  gap-1.5 whitespace-nowrap`}>
-              {/* ================= AKSI PENDING ================= */}
+            <div className={`${getHighlightClass(row)} flex items-center gap-1.5 whitespace-nowrap`}>
               {row.status === "pending" && (
                 <>
-                  <button onClick={() => handleUpdateStatus(row.id, "diproses")} className="text-blue-600 hover:text-blue-800 font-bold text-xs uppercase">
+                  <Button size="xs" variant="primary" onClick={() => handleUpdateStatus(row.id, "diproses")}>
                     Proses
-                  </button>
-                  <button onClick={() => setModalTolak({ isOpen: true, suratId: row.id })} className="text-red-600 hover:text-red-800 font-bold text-xs uppercase ml-3">
+                  </Button>
+                  <Button size="xs" 
+                  leftIcon={<CircleX className="w-3 h-3" />}
+                  variant="danger" onClick={() => setModalTolak({ isOpen: true, suratId: row.id })}>
                     Tolak
-                  </button>
+                  </Button>
                 </>
               )}
-              {/* ================= AKSI DIPROSES ================= */}
+
               {row.status === "diproses" && (
                 <>
-                  <button
-                    disabled={loadingId !== null}
+                  <Button 
+                    size="xs" 
+                    variant="warning"
+                    loading={isRowLoading} 
+                    leftIcon={<FileCheck className="w-3 h-3" />}
                     onClick={() => handleGeneratePDF(row.id)}
-                    className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1 min-w-[100px] justify-center"
                   >
-                    {isRowLoading ? (
-                      <>
-                        <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Cetak...
-                      </>
-                    ) : (
-                      <>
-                        <FileCheck className="w-3.5 h-3.5" /> Selesaikan
-                      </>
-                    )}
-                  </button>
-                  <button disabled={loadingId !== null} onClick={() => setModalTolak({ isOpen: true, suratId: row.id })} className="border border-red-200 text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
+                    Selesaikan
+                  </Button>
+                  <Button size="xs"
+                  leftIcon={<CircleX className="w-3 h-3" />}
+                  variant="danger" onClick={() => setModalTolak({ isOpen: true, suratId: row.id })}>
                     Tolak
-                  </button>
+                  </Button>
                 </>
               )}
-              {/* ================= AKSI SELESAI ================= */}
+
               {row.status === "selesai" && (
                 <>
-                  <button
-                    disabled={loadingId !== null}
+                  <Button 
+                    size="xs" 
+                    loading={loadingId === `download-${row.id}`}
+                    leftIcon={<Download className="w-3 h-3" />}
                     onClick={() => handleDownloadPDF(row.id, row.jenis_surat, row.profiles?.nama)}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm min-w-[120px] justify-center"
                   >
-                    {loadingId === `download-${row.id}` ? (
-                      <>
-                        <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Downloading...
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-3.5 h-3.5" /> Download PDF
-                      </>
-                    )}
-                  </button>
-
-                  <button className="border border-slate-200 text-slate-600 hover:bg-slate-50 px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
-                    <Eye className="w-3.5 h-3.5" /> Detail
-                  </button>
+                    Download
+                  </Button>
+                  <Button size="xs" variant="outline" leftIcon={<Eye className="w-3 h-3" />}>
+                    Detail
+                  </Button>
                 </>
               )}
-              {/* ================= AKSI DITOLAK ================= */}
+
               {row.status === "ditolak" && (
                 <>
-                  <button
-                    onClick={() => setModalAlasan({ isOpen: true, teks: row.catatan_petugas || "Tidak ada alasan spesifik." })}
-                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold transition"
-                  >
+                  <Button size="xs" variant="secondary" onClick={() => setModalAlasan({ isOpen: true, teks: row.catatan_petugas || "Tidak ada alasan." })}>
                     Alasan
-                  </button>
-                  <button
-                    disabled={loadingId !== null}
-                    onClick={() => handleUpdateStatus(row.id, "diproses")}
-                    className="border border-sky-200 text-sky-600 hover:bg-sky-50 px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1"
-                  >
-                    <RefreshCw className="w-3 h-3" /> Proses Ulang
-                  </button>
+                  </Button>
+                  <Button size="xs" variant="outline" leftIcon={<RefreshCw className="w-3 h-3" />} onClick={() => handleUpdateStatus(row.id, "diproses")}>
+                    Proses Ulang
+                  </Button>
                 </>
               )}
             </div>

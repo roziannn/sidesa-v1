@@ -29,6 +29,7 @@ async function KeluargaServerFetch() {
       rt,
       rw,
       alamat,
+      updated_at,
       anggota(count)
     `);
 
@@ -50,6 +51,7 @@ async function KeluargaServerFetch() {
     nomor_kk: k.no_kk, // Memetakan 'no_kk' dari database ke 'nomor_kk' milik DataTable
     nama_kepala: k.nama_kepala || "Belum Diisi", // Mengambil kolom nama_kepala string langsung
     alamat: k.alamat,
+    updated_at: k.updated_at,
     rt: k.rt || "00",
     rw: k.rw || "00",
     jumlah_anggota: k.anggota && k.anggota[0] ? Number(k.anggota[0].count) : 0,

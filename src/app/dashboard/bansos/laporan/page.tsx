@@ -5,6 +5,8 @@ import { Search, Users, CheckCircle2, Clock, CircleDollarSign, ChartBarBig } fro
 import DataTable, { Column } from "@/components/DataTable";
 import LaporanTableClient from "@/components/bansos/LaporanClient";
 import { formatDate } from "@/lib/format";
+import Select from "@components/ui/Select";
+import Button from "@components/ui/Button";
 
 interface LaporanPageProps {
   searchParams: Promise<{
@@ -90,20 +92,41 @@ export default async function LaporanBansosPage({ searchParams }: LaporanPagePro
       {/* FILTER FORM */}
       <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm print:hidden">
         <form method="GET" className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
-            {/* Filter Input */}
-            <select name="program" defaultValue={selectedProgram} className="w-full border-slate-300 rounded-lg py-1.5 px-3 text-xs font-semibold text-slate-700 border">
-              <option value="">📁 Semua Program</option>
-              {listProgramMaster.map((prog) => <option key={prog} value={prog}>{prog}</option>)}
-            </select>
-            <select name="bulan" defaultValue={selectedBulan} className="w-full border-slate-300 rounded-lg py-1.5 px-3 text-xs font-semibold text-slate-700 border">
-              {DAFTAR_BULAN.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
-            </select>
-            <select name="tahun" defaultValue={selectedTahun} className="w-full border-slate-300 rounded-lg py-1.5 px-3 text-xs font-semibold text-slate-700 border">
-              {[currentYear - 1, currentYear, currentYear + 1].map((y) => <option key={y} value={y.toString()}>{y}</option>)}
-            </select>
-            <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2 px-4 rounded-lg shadow transition h-9 flex items-center justify-center gap-2">
-              <Search className="w-4 h-4" /> Tampilkan
-            </button>
+          <Select 
+            name="program" 
+            defaultValue={selectedProgram} 
+          >
+            <option value="">📁 Semua Program</option>
+            {listProgramMaster.map((prog) => (
+              <option key={prog} value={prog}>{prog}</option>
+            ))}
+          </Select>
+
+          <Select 
+            name="bulan" 
+            defaultValue={selectedBulan} 
+          >
+            {DAFTAR_BULAN.map((b) => (
+              <option key={b.value} value={b.value}>{b.label}</option>
+            ))}
+          </Select>
+
+          <Select 
+            name="tahun" 
+            defaultValue={selectedTahun} 
+          >
+            {[currentYear - 1, currentYear, currentYear + 1].map((y) => (
+              <option key={y} value={y.toString()}>{y}</option>
+            ))}
+          </Select>
+         <Button 
+          type="submit" 
+          variant="primary" 
+          size="sm" 
+          leftIcon={<Search className="w-4 h-4" />}
+        >
+          Tampilkan Data
+        </Button>
         </form>
       </div>
 

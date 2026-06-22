@@ -11,6 +11,8 @@ import DataTable, {
 import { formatDate } from '@/lib/format';
 import Button from '@components/ui/Button';
 import Link from 'next/link';
+import Card from '@components/ui/Card';
+import Select from '@components/ui/Select';
 
 type Kegiatan = {
   id: string;
@@ -245,236 +247,131 @@ export default function KegiatanClient({
     
 
   return (
-    <div
-      className={`space-y-6 `}
+   <div className="space-y-6">
+  {/* HEADER */}
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 shadow-sm">
+        <Calendar className="h-5 w-5" />
+      </div>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Manajemen Kegiatan</h1>
+        <p className="text-sm text-slate-500">Kelola agenda kegiatan dan aktivitas desa.</p>
+      </div>
+    </div>
+    <Link href="/dashboard/kegiatan/tambah">
+      <Button leftIcon={<Plus className="h-4 w-4" />}>Buat Kegiatan</Button>
+    </Link>
+  </div>
+
+  {/* GRID UTAMA */}
+  <div className="grid gap-6 xl:grid-cols-5">
+    
+    {/* TABEL KEGIATAN */}
+    <Card 
+      title={`Kegiatan Bulan ${namaBulan}`}
+      description={`Terdapat ${filteredData.length} kegiatan pada bulan ${namaBulan} ${tahun}`}
+      padding="sm"
+      className="xl:col-span-2"
     >
-      {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 shadow-sm">
-            <Calendar className="h-5 w-5" />
-          </div>
+      {filteredData.length === 0 ? (
+        <div className="py-16 text-center text-slate-500">Belum ada kegiatan pada bulan ini.</div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={filteredData}
+          onView={(row) => router.push(`/dashboard/kegiatan/${row.id}`)}
+        />
+      )}
+    </Card>
 
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              Manajemen Kegiatan
-            </h1>
-
-            <p className="text-sm text-slate-500">
-              Kelola agenda
-              kegiatan dan
-              aktivitas desa.
-            </p>
-          </div>
+    {/* KALENDER */}
+    <Card 
+      className="xl:col-span-3"
+      padding="sm"
+    >
+      {/* NAVIGASI KALENDER */}
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={() => changeMonth('prev')} className="h-9 w-9">
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => changeMonth('next')} className="h-9 w-9">
+            <ChevronRight className="w-5 h-5" />
+          </Button>
+          <h2 className="text-lg font-bold text-slate-800 capitalize min-w-[140px]">
+            {namaBulan} {tahun}
+          </h2>
         </div>
 
-        <Link href="/dashboard/kegiatan/tambah">
-        <Button
-          leftIcon={<Plus className="h-4 w-4" />}
-        >
-          Buat Kegiatan
-        </Button>
-      </Link>
+        <div className="flex items-center gap-2">
+          {/* Filter Bulan */}
+          <Select 
+            value={bulan.toString()} 
+            onChange={(e) => setBulan(parseInt(e.target.value))}
+            className="w-32 py-1.5 text-xs"
+          >
+            {[
+              "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+              "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            ].map((nama, idx) => (
+              <option key={idx + 1} value={idx + 1}>{nama}</option>
+            ))}
+          </Select>
+
+          {/* Filter Tahun */}
+          <Select 
+            value={tahun.toString()} 
+            onChange={(e) => setTahun(parseInt(e.target.value))}
+            className="w-24 py-1.5 text-xs"
+          >
+            {[tahun - 1, tahun, tahun + 1].map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </Select>
+        </div>
       </div>
 
-        <div className="grid gap-6 xl:grid-cols-5">
-        <div className="xl:col-span-2">
-            <div className="rounded-xl bg-white shadow-sm">
-            <div className="p-4">
-                <h2 className="font-semibold text-slate-900">
-                Kegiatan Bulan {namaBulan}
-                </h2>
-                <p className="text-sm text-slate-500">
-                {filteredData.length} kegiatan
-                </p>
-            </div>
-
-            {filteredData.length === 0 ? (
-                <div className="py-16 text-center text-slate-500">
-                Belum ada kegiatan pada bulan ini.
-                </div>
-            ) : (
-                <DataTable
-                columns={columns}
-                data={filteredData}
-                onView={(row) =>
-                router.push(
-                  `/dashboard/kegiatan/${row.id}`
-                )}
-                />
-            )}
-            </div>
-        </div>
-
-  {/* KALENDER */}
-    <div className="xl:col-span-3">
-      <div className="flex-1 flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm p-4 min-h-0 overflow-hidden">
-    {/* NAVIGASI BULAN */}
-    <div className="flex items-center justify-between border-b border-slate-200 pb-3 flex-shrink-0">
-      <button
-        onClick={() => changeMonth('prev')}
-        className="
-  flex h-10 w-10 items-center justify-center
-  rounded-xl border border-slate-200
-  bg-white shadow-sm
-  transition-all
-
-  hover:border-emerald-300
-  hover:bg-emerald-50
-  hover:text-emerald-600
-"
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </button>
-
-     <h2 className="text-xl font-bold text-slate-900 capitalize">
-         {namaBulan} {tahun}
-     </h2>
-
-      <button
-        onClick={() => changeMonth('next')}
-       className="
-  flex h-10 w-10 items-center justify-center
-  rounded-xl border border-slate-200
-  bg-white shadow-sm
-  transition-all
-
-  hover:border-emerald-300
-  hover:bg-emerald-50
-  hover:text-emerald-600
-"
-      >
-        <ChevronRight className="w-5 h-5" />
-      </button>
-    </div>
-
-    {/* NAMA HARI */}
-    <div className="grid grid-cols-7 gap-2 mt-4 mb-2 flex-shrink-0">
-      {[
-        'Min',
-        'Sen',
-        'Sel',
-        'Rab',
-        'Kam',
-        'Jum',
-        'Sab',
-      ].map((day, index) => (
-        <div
-          key={day}
-          className={`text-center text-xs font-bold uppercase tracking-wider ${
-            index === 0
-              ? 'text-red-500'
-              : 'text-slate-500'
-          }`}
-        >
-          {day}
-        </div>
-      ))}
-    </div>
-
-    {/* GRID TANGGAL */}
-    <div
-      className="grid grid-cols-7 gap-2 flex-1 min-h-0"
-      style={{
-        gridTemplateRows: `repeat(${totalWeeks}, minmax(0,1fr))`,
-      }}
-    >
-      {calendarDays.map((day, index) => {
-        const today = new Date();
-
-        const isToday =
-          day === today.getDate() &&
-          bulan ===
-            today.getMonth() + 1 &&
-          tahun ===
-            today.getFullYear();
-
-        const dayEvents = day
-          ? eventsByDay[day] || []
-          : [];
-
-        return (
-          <div
-            key={index}
-           className={`
-            rounded-2xl border p-2.5
-            transition-all duration-200
-
-            ${
-                !day
-                ? 'border-dashed border-slate-200 bg-slate-50/50'
-                : 'border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-emerald-300'
-            }
-            `}
-          >
-            {day && (
-              <>
-                <div className="flex items-center justify-between flex-shrink-0">
-                  <div
-                    className={`
-                      flex h-6 w-6 items-center justify-center
-                      rounded-full text-xs font-bold
-
-                      ${
-                        isToday
-                          ? 'bg-emerald-600 text-white'
-                          : 'text-slate-700'
-                      }
-                    `}
-                  >
-                    {day}
-                  </div>
-
-                  {dayEvents.length > 0 && (
-                    <span className="rounded-full border bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
-                      {dayEvents.length}
-                    </span>
-                  )}
-                </div>
-
-                {/* EVENT */}
-                <div className="mt-2 flex-1 space-y-1 overflow-y-auto min-h-0">
-                  {dayEvents.map(
-                    (event) => (
-                      <button
-                        key={event.id}
-                        onClick={() =>
-                          router.push(
-                            `/dashboard/kegiatan/${event.id}`
-                          )
-                        }
-                        title={`${event.judul} (${event.waktu_mulai.slice(
-                          0,
-                          5
-                        )})`}
-                        className={`
-                          block w-full truncate rounded-md border px-1.5 py-1 text-left text-[10px] font-semibold transition
-
-                          ${
-                            event.status ===
-                            'aktif'
-                              ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                              : 'border-slate-200 bg-slate-50 text-slate-500 line-through'
-                          }
-                        `}
-                      >
-                        {event.waktu_mulai.slice(
-                          0,
-                          5
-                        )}{' '}
-                        {event.judul}
-                      </button>
-                    )
-                  )}
-                </div>
-              </>
-            )}
+      {/* GRID KALENDER */}
+      <div className="grid grid-cols-7 gap-2">
+        {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map((day, index) => (
+          <div key={day} className={`text-center text-xs font-bold uppercase ${index === 0 ? 'text-red-500' : 'text-slate-500'}`}>
+            {day}
           </div>
-        );
-      })}
-    </div>
-  </div>
-    </div>
+        ))}
+      </div>
+
+      <div 
+        className="grid grid-cols-7 gap-2 mt-2"
+        style={{ gridTemplateRows: `repeat(${totalWeeks}, minmax(100px, 1fr))` }}
+      >
+        {calendarDays.map((day, index) => {
+          const isToday = day === new Date().getDate() && bulan === new Date().getMonth() + 1 && tahun === new Date().getFullYear();
+          const dayEvents = day ? eventsByDay[day] || [] : [];
+          
+          return (
+            <div key={index} className={`rounded-lg border p-2 ${!day ? 'bg-slate-50 border-dashed' : 'bg-white border-slate-200'}`}>
+              {day && (
+                <>
+                  <div className={`text-xs font-bold mb-2 ${isToday ? 'text-emerald-600' : 'text-slate-700'}`}>{day}</div>
+                  <div className="space-y-1">
+                    {dayEvents.map(event => (
+                      <button 
+                        key={event.id}
+                        onClick={() => router.push(`/dashboard/kegiatan/${event.id}`)}
+                        className={`block w-full truncate rounded px-1.5 py-0.5 text-[10px] font-semibold border ${event.status === 'aktif' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-slate-50 border-slate-200 text-slate-500 line-through'}`}
+                      >
+                        {event.waktu_mulai.slice(0, 5)} {event.judul}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </Card>
   </div>
 </div>
      

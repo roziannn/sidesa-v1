@@ -304,7 +304,7 @@ export default function DetailKegiatanPage() {
           size="sm"
           footer={
             <>
-              <Button 
+              <Button   
                 variant="outline" 
                 size="sm" 
                 onClick={() => setShowCancelModal(false)}

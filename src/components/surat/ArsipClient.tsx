@@ -3,10 +3,12 @@
 
 import { useState } from "react";
 import DataTable, { Column } from "@/components/DataTable";
-import { RefreshCw, Eye } from "lucide-react";
+import { RefreshCw, Eye, Search, Download } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import { useToast } from "@/hooks/useToast";
 import { formatDate } from "@/lib/format";
+import Input from "@components/ui/Input";
+import Button from "@components/ui/Button";
 
 export default function ArsipClient({ initialData }: { initialData: any[] }) {
   const [data] = useState(initialData);
@@ -79,27 +81,38 @@ export default function ArsipClient({ initialData }: { initialData: any[] }) {
       key: "aksi",
       label: "Aksi",
       render: (_, row) => (
-        <div className="flex gap-2">
-          {row.status === "pending" && (
-            <button onClick={() => handleUpdateStatus(row.id, "diproses")} className="px-3 py-1 bg-amber-500 text-white text-xs rounded-md hover:bg-amber-600 transition">
-              Proses
-            </button>
-          )}
+       <div className="flex items-center gap-1.5">
+        {row.status === "pending" && (
+          <Button 
+            variant="warning" 
+            size="xs" 
+            onClick={() => handleUpdateStatus(row.id, "diproses")}
+          >
+            Proses
+          </Button>
+        )}
 
-          {/* Tombol Selesai (Memanggil fungsi generate & update status) */}
-          {row.status === "diproses" && (
-            <button onClick={() => handleUpdateStatus(row.id, "selesai")} className="px-3 py-1 bg-emerald-600 text-white text-xs rounded-md hover:bg-emerald-700 transition">
-              Selesai
-            </button>
-          )}
+        {row.status === "diproses" && (
+          <Button 
+            variant="primary" 
+            size="xs" 
+            onClick={() => handleUpdateStatus(row.id, "selesai")}
+          >
+            Selesai
+          </Button>
+        )}
 
-          {/* Tombol Download (Hanya jika status selesai) */}
-          {row.status === "selesai" && (
-            <button onClick={() => window.open(row.file_url, "_blank")} className="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition">
-              Download
-            </button>
-          )}
-        </div>
+        {row.status === "selesai" && (
+          <Button 
+            variant="primary" // Warna Emerald sesuai dengan "ijo"
+            size="xs" 
+            leftIcon={<Download className="w-3 h-3" />} 
+            onClick={() => window.open(row.file_url, "_blank")}
+          >
+            Download
+          </Button>
+        )}
+      </div>
       ),
     },
   ];
@@ -109,13 +122,15 @@ export default function ArsipClient({ initialData }: { initialData: any[] }) {
 
   return (
     <div className="space-y-4">
-      <input
-        type="text"
-        placeholder="Cari nama atau nomor surat..."
-        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+      <div className="w-full max-w-sm">
+      <Input
+        placeholder="Cari nama pemohon..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
+        className="pl-9"
+        leftIcon={<Search className="w-4 h-4 text-slate-400" />}
       />
+    </div>
 
       <DataTable columns={columns} data={filteredData} />
 

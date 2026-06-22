@@ -9,6 +9,7 @@ import IncomeTrendSection from '@components/retribusi/Chart/IncomeTrandChart';
 import LevyBreakdownSection from '@components/retribusi/Chart/LevyBreakdownChart';
 import Link from 'next/link';
 import Button from '@components/ui/Button';
+import Card from '@components/ui/Card';
 
 export default async function LaporanPage() {
   // Contoh data rekap (biasanya hasil query ke DB)
@@ -50,42 +51,55 @@ export default async function LaporanPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Tren Pemasukan (12 Bulan Terakhir)</h3>
-          <div className="h-[300px] w-full">
-            <Suspense fallback={<div className="h-full w-full bg-gray-100 animate-pulse rounded-lg" />}>
-              <IncomeTrendSection />
-            </Suspense>
-          </div>
+     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <Card 
+        title="Trend Pemasukan (12 Bulan Terakhir)"
+        description='Grafik trend pemasukan dalam 12 bulan terakhir.'
+        className="lg:col-span-2"
+      >
+        <div className="h-[300px] w-full">
+          <Suspense fallback={<div className="h-full w-full bg-slate-100 animate-pulse rounded-lg" />}>
+            <IncomeTrendSection />
+          </Suspense>
         </div>
+      </Card>
 
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Proporsi Jenis Retribusi</h3>
-          <div className="h-[300px] w-full">
-            <Suspense fallback={<div className="h-full w-full bg-gray-100 animate-pulse rounded-lg" />}>
-              <LevyBreakdownSection />
-            </Suspense>
-          </div>
+      <Card 
+        title="Proporsi Jenis Retribusi"
+        description='Grafik pembagian jenis retribusi.'
+      >
+        <div className="h-[300px] w-full">
+          <Suspense fallback={<div className="h-full w-full bg-slate-100 animate-pulse rounded-lg" />}>
+            <LevyBreakdownSection />
+          </Suspense>
         </div>
-      </div>
+      </Card>
+    </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-4">
-          <h3 className="text-sm font-semibold text-gray-700">Rekapitulasi Penagihan Bulanan</h3>
-        </div>
-        <Suspense fallback={<div className="p-8 text-center text-gray-500">Memuat tabel rekap...</div>}>
-          <RekapTableClient/>
-        </Suspense>
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Card 1: Rekapitulasi */}
+        <Card 
+          title="Rekapitulasi Penagihan Bulanan" 
+          description='Summary rekap penagihan bulanan.'
+          padding="sm"
+          className="h-full"
+        >
+          <Suspense fallback={<div className="p-8 text-center text-gray-500">Memuat tabel rekap...</div>}>
+            <RekapTableClient />
+          </Suspense>
+        </Card>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-4">
-          <h3 className="text-sm font-semibold text-gray-700">Top 10 Warga Paling Tepat Bayar</h3>
-        </div>
-        <Suspense fallback={<div className="p-8 text-center text-gray-500">Memuat data apresiasi...</div>}>
-          <TopCitizensTable />
-        </Suspense>
+        {/* Card 2: Top 10 Warga */}
+        <Card 
+          title="Top 10 Warga Paling Tepat Bayar" 
+          description='Daftar 10 warga yang paling tepat bayar retribusi.'
+          padding="sm"
+          className="h-full"
+        >
+          <Suspense fallback={<div className="p-8 text-center text-gray-500">Memuat data apresiasi...</div>}>
+            <TopCitizensTable />
+          </Suspense>
+        </Card>
       </div>
     </div>
   );

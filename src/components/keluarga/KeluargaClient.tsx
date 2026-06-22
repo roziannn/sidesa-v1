@@ -10,6 +10,7 @@ import { supabaseClient } from "@/lib/supabase/client";
 import Button from "@components/ui/Button";
 import Input from "@components/ui/Input";
 import StatusBadge from "@components/StatusBadge";
+import { formatShortDate } from "@/lib/format";
 
 interface KeluargaData {
   id: string;
@@ -51,6 +52,8 @@ export default function KeluargaClient({ initialData, totalKK }: KeluargaClientP
       label: "RT / RW",
       render: (value: unknown, row: KeluargaData) => `RT ${row.rt} / RW ${row.rw}`,
     },
+    { key: "updated_at", label: "Diperbarui Tanggal" , render: (val) => val ? formatShortDate(val as string) : "-"},
+
     {
       key: "jumlah_anggota",
       label: "Anggota",

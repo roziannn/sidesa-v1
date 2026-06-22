@@ -8,7 +8,7 @@ import Button from "./ui/Button";
 interface ConfirmModalProps {
   isOpen: boolean;
   title: string;
-  message: string;
+  message: React.ReactNode;
   confirmLabel?: string; // default: "Hapus"
   confirmVariant?: "danger" | "warning" | "primary"; // default: 'danger'
   isLoading?: boolean;

@@ -9,6 +9,13 @@ import { Trash2, UserPlus, Printer, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import { formatDate, formatDayDate } from "@/lib/format";
 import Button from "@components/ui/Button";
+import Card from "@components/ui/Card";
+import StatusBadge from "@components/StatusBadge";
+import DataTable, { Column } from "@components/DataTable";
+import Modal from "@components/ui/Modal";
+import SelectSearch from "@components/ui/SelectSearch";
+import Textarea from "@components/ui/Textarea";
+import ConfirmModal from "@components/ConfirmModal";
 
 // Interfaces
 interface Profile {
@@ -55,12 +62,41 @@ export default function DetailKegiatanPage() {
 
   const loadData = useCallback(async () => {
     if (!id) return;
-    const { data: keg } = await supabaseClient.from("kegiatan").select("*, peserta_kegiatan(id, catatan, created_at, profiles(id, nama, rt, rw, no_hp))").eq("id", id).single();
+    const { data: keg } = await supabaseClient
+      .from("kegiatan")
+      .select("*, peserta_kegiatan(id, catatan, created_at, profiles(id, nama, rt, rw, no_hp))")
+      .eq("id", id)
+      .single();
 
     setKegiatan(keg as Kegiatan);
     setPeserta(keg?.peserta_kegiatan || []);
     setLoading(false);
   }, [id]);
+
+  const columns: Column<Peserta>[] = [
+    { key: "no", label: "No", render: (_, __, index) => index + 1 },
+    { 
+      key: "nama", 
+      label: "Nama", 
+      render: (_, row) => <span className="font-medium">{row.profiles?.nama || "-"}</span> 
+    },
+    { 
+      key: "rt", 
+      label: "RT/RW", 
+      render: (_, row) => `${row.profiles?.rt || "00"}/${row.profiles?.rw || "00"}` 
+    },
+    { key: "no_hp", label: "No HP", render: (_, row) => row.profiles?.no_hp || "-" },
+    { 
+      key: "created_at", 
+      label: "Waktu Daftar", 
+      render: (val) => new Date(val as string).toLocaleDateString("id-ID") 
+    },
+  ];
+
+  const wargaOptions = wargaList.map((w) => ({
+  value: w.id,
+  label: `${w.nama} — RT ${w.rt}/RW ${w.rw}`,
+  }));
 
   const fetchWarga = useCallback(async () => {
     const { data } = await supabaseClient.from("profiles").select("*");
@@ -77,11 +113,9 @@ export default function DetailKegiatanPage() {
       showToast("error", "Gagal", "Silakan pilih warga terlebih dahulu!");
       return;
     }
-
     const apakahSudahTerdaftar = peserta.some((p) => p.profiles?.id === newPeserta.warga_id);
-
     if (apakahSudahTerdaftar) {
-      showToast("error", "Peserta Sudah Ada", "Warga ini sudah terdaftar dalam kegiatan ini.");
+      showToast("error", "Peserta Sudah Ada", "Warga ini sudah terdaftar.");
       return;
     }
 
@@ -92,10 +126,9 @@ export default function DetailKegiatanPage() {
     });
 
     if (error) {
-      console.error("Error saat menambah peserta:", error);
       showToast("error", "Gagal Menambahkan", error.message);
     } else {
-      showToast("success", "Berhasil", "Peserta baru telah ditambahkan ke kegiatan.");
+      showToast("success", "Berhasil", "Peserta telah ditambahkan.");
       setShowAddModal(false);
       setNewPeserta({ warga_id: "", catatan: "" });
       loadData();
@@ -107,7 +140,7 @@ export default function DetailKegiatanPage() {
     if (error) {
       showToast("error", "Gagal", "Gagal menghapus peserta.");
     } else {
-      showToast("success", "Berhasil Dihapus", "Peserta dikeluarkan dari kegiatan.");
+      showToast("success", "Berhasil", "Peserta dikeluarkan.");
       setShowDeleteModal(null);
       loadData();
     }
@@ -115,18 +148,13 @@ export default function DetailKegiatanPage() {
 
   const handleBatalkan = async () => {
     const { error } = await supabaseClient.from("kegiatan").update({ status: "Dibatalkan", keterangan_batal: alasanBatal }).eq("id", id);
-
     if (error) {
       showToast("error", "Gagal", "Gagal membatalkan kegiatan.");
     } else {
-      showToast("success", "Kegiatan Dibatalkan", "Status kegiatan berhasil diperbarui.");
+      showToast("success", "Berhasil", "Status diperbarui.");
       setShowCancelModal(false);
       loadData();
     }
-  };
-
-  const handleCetakDaftarHadir = () => {
-    window.print();
   };
 
   if (loading) return <div className="p-8 text-center print:hidden">Memuat data...</div>;
@@ -135,201 +163,172 @@ export default function DetailKegiatanPage() {
   const terdaftar = peserta.length;
   const sisa = kegiatan.kuota - terdaftar;
   const persentase = (terdaftar / kegiatan.kuota) * 100;
-  const getProgressColor = () => {
-    if (persentase >= 90) return "bg-red-500";
-    if (persentase >= 70) return "bg-yellow-500";
-    return "bg-emerald-500";
-  };
-
-  // Bersihkan format jam dari detik (:00) jika ada
   const waktuMulaiSlicing = kegiatan.waktu_mulai?.slice(0, 5);
   const waktuSelesaiSlicing = kegiatan.waktu_selesai?.slice(0, 5);
 
   return (
     <>
-      {/* ================================================================
-          LAYOUT UNTUK LAYAR WEB STANDARD (DISEMBUNYIKAN SAAT PRINT)
-         ================================================================ */}
       <div className="max-w-4xl mx-auto space-y-6 pb-20 print:hidden">
-        {/* SECTION 1: INFO */}
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-bold">{kegiatan.judul}</h1>
-              <span className={`px-2 py-0.5 rounded text-xs font-bold ${kegiatan.status === "aktif" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>{kegiatan.status.toUpperCase()}</span>
-            </div>
-            {kegiatan.status === 'aktif' && (
-            <Button
-              variant="danger"
-              size="sm"
-              leftIcon={<XCircle className="h-4 w-4" />}
-              onClick={() => setShowCancelModal(true)}
-            >
-              Batalkan Kegiatan
-            </Button>
-          )}
-          </div>
-
+        {/* CARD 1: INFO */}
+        <Card
+          title={kegiatan.judul}
+          description="Informasi kegiatan yang akan datang."
+          headerAction={
+            kegiatan.status === 'aktif' && (
+              <Button variant="danger" size="sm" leftIcon={<XCircle className="h-4 w-4" />} onClick={() => setShowCancelModal(true)}>
+                Batalkan
+              </Button>
+            )
+          }
+        >
+          <StatusBadge status={kegiatan.status} />
+          
           <div className="mt-4">
             <div className="flex justify-between text-sm mb-1 font-medium">
-              <span>
-                {terdaftar} dari {kegiatan.kuota} peserta
-              </span>
-              <span>{Math.round(persentase)}%</span>
+              <span>{terdaftar} dari {kegiatan.kuota} peserta</span>
+              <span>{Math.round(persentase || 0)}%</span>
             </div>
             <div className="w-full bg-slate-200 rounded-full h-2.5">
-              <div className={`h-2.5 rounded-full ${getProgressColor()}`} style={{ width: `${Math.min(persentase, 100)}%` }}></div>
+              <div className={`h-2.5 rounded-full ${persentase >= 90 ? "bg-red-500" : "bg-emerald-500"}`} style={{ width: `${Math.min(persentase, 100)}%` }}></div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mt-6 text-sm">
             <div>
               <p className="text-slate-500">Tanggal</p>
-              <p className="font-semibold">
-              {formatDayDate(kegiatan.tanggal)}
-            </p>
+              <p className="font-semibold">{formatDayDate(kegiatan.tanggal)}</p>
             </div>
             <div>
               <p className="text-slate-500">Waktu</p>
-              <p className="font-semibold">
-                {waktuMulaiSlicing} - {waktuSelesaiSlicing} WIB
-              </p>
+              <p className="font-semibold">{waktuMulaiSlicing} - {waktuSelesaiSlicing} WIB</p>
             </div>
             <div>
               <p className="text-slate-500">Lokasi</p>
               <p className="font-semibold">{kegiatan.lokasi}</p>
             </div>
           </div>
-        </div>
+        </Card>
 
-        {/* SECTION 2: TABEL PESERTA */}
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-            <h2 className="font-bold text-lg">Peserta Terdaftar ({terdaftar} orang)</h2>
-
+        {/* CARD 2: TABEL */}
+        <Card
+          title={`Peserta Terdaftar (${terdaftar} orang)`}
+          description="Peserta yang terdaftar pada kegiatan ini."
+          padding="sm"
+          headerAction={
             <div className="flex items-center gap-2">
-             <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  leftIcon={<Printer className="w-4 h-4" />}
-                  onClick={handleCetakDaftarHadir}
-                >
-                  Cetak Daftar Hadir
+              <Button variant="outline" size="sm" leftIcon={<Printer className="w-4 h-4" />} onClick={() => window.print()}>
+                Cetak
+              </Button>
+              {kegiatan.status.toLowerCase() === 'aktif' && (
+                <Button variant="primary" size="sm" disabled={sisa <= 0} leftIcon={<UserPlus className="w-4 h-4" />} onClick={() => setShowAddModal(true)}>
+                  Tambah
                 </Button>
-
-                {kegiatan.status.toLowerCase() === 'aktif' && (
-                  <Button
-                    variant="primary"
-                    disabled={sisa <= 0}
-                    leftIcon={<UserPlus className="w-4 h-4" />}
-                    onClick={() => setShowAddModal(true)}
-                  >
-                    {sisa <= 0
-                      ? 'Kuota Penuh'
-                      : 'Tambah Peserta'}
-                  </Button>
-                )}
-              </div>
+              )}
             </div>
-          </div>
+          }
+        >
+        <DataTable<Peserta>
+            columns={columns}
+            data={peserta}
+            onDelete={(row) => setShowDeleteModal(row)}
+          />
+        </Card>
 
-          {sisa <= kegiatan.kuota * 0.1 && sisa > 0 && <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4 text-yellow-700 text-sm font-medium">⚠️ Sisa kuota hanya {sisa} tempat lagi!</div>}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b">
-                <tr className="text-slate-500 text-left">
-                  <th className="py-2">No</th>
-                  <th className="py-2">Nama</th>
-                  <th className="py-2">RT/RW</th>
-                  <th className="py-2">No HP</th>
-                  <th className="py-2">Waktu Daftar</th>
-                  <th className="py-2 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {peserta.map((p, idx) => (
-                  <tr key={p.id} className="border-b">
-                    <td className="py-3">{idx + 1}</td>
-                    <td className="py-3 font-medium">{p.profiles?.nama || "Tidak Terdata"}</td>
-                    <td className="py-3">
-                      {p.profiles?.rt || "00"}/{p.profiles?.rw || "00"}
-                    </td>
-                    <td className="py-3">{p.profiles?.no_hp || "-"}</td>
-                    <td className="py-3">{new Date(p.created_at).toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
-                    <td className="py-3 text-right">
-                      <button onClick={() => setShowDeleteModal(p)} className="text-red-600 hover:bg-red-50 p-1 rounded">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {/* modal tambah */}
+      <Modal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Tambah Peserta"
+        description="Tambah peserta pada kegiatan ini."
+        size="sm"
+      footer={
+        <>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowAddModal(false)}
+          >
+            Batal
+          </Button>
+          <Button 
+            variant="primary" 
+            size="sm" 
+            onClick={handleTambahPeserta}
+          >
+            Simpan Peserta
+          </Button>
+        </>
+      }
+      >
+        <div className="space-y-4">
+          <SelectSearch
+            label="Pilih Warga"
+            placeholder="Cari warga..."
+            options={wargaOptions}
+            value={newPeserta.warga_id}
+            onChange={(value) => setNewPeserta({ ...newPeserta, warga_id: value })}
+            required
+          />
+          
+          <Textarea 
+            label="Catatan"
+            placeholder="Catatan (Opsional)"
+            rows={3} 
+            value={newPeserta.catatan}
+            onChange={(e) => setNewPeserta({ ...newPeserta, catatan: e.target.value })} 
+          />
         </div>
+      </Modal>
 
-        {/* MODAL TAMBAH */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white p-6 rounded-xl w-full max-w-md">
-              <h3 className="font-bold mb-4">Tambah Peserta</h3>
-              <select className="w-full border p-2 rounded mb-3 text-sm bg-white" onChange={(e) => setNewPeserta({ ...newPeserta, warga_id: e.target.value })}>
-                <option value="">Pilih Warga...</option>
-                {wargaList.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.nama} — RT {w.rt}/RW {w.rw}
-                  </option>
-                ))}
-              </select>
-              <textarea placeholder="Catatan (Opsional)" className="w-full border p-2 rounded mb-4 text-sm" onChange={(e) => setNewPeserta({ ...newPeserta, catatan: e.target.value })} />
-              <div className="flex gap-2">
-                <button onClick={() => setShowAddModal(false)} className="flex-1 border py-2 rounded text-sm font-semibold">
-                  Batal
-                </button>
-                <button onClick={handleTambahPeserta} className="flex-1 bg-emerald-600 text-white py-2 rounded text-sm font-semibold">
-                  Simpan
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* modal hapus */}
+        <ConfirmModal
+          isOpen={!!showDeleteModal}
+          title="Hapus Peserta"
+        message={
+          <>
+            Apakah Anda yakin ingin menghapus <strong className="font-bold text-slate-900">{showDeleteModal?.profiles?.nama}</strong> dari kegiatan ini?
+          </>
+        }
+          confirmLabel="Hapus"
+          confirmVariant="danger"
+          onCancel={() => setShowDeleteModal(null)}
+          onConfirm={() => showDeleteModal && handleHapusPeserta(showDeleteModal.id)}
+        />
 
-        {/* MODAL HAPUS */}
-        {showDeleteModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white p-6 rounded-xl w-full max-w-sm">
-              <p className="text-sm">
-                Hapus <strong>{showDeleteModal.profiles?.nama}</strong> dari daftar kegiatan?
-              </p>
-              <div className="flex gap-2 mt-4">
-                <button onClick={() => setShowDeleteModal(null)} className="flex-1 border py-2 rounded text-sm font-semibold">
-                  Batal
-                </button>
-                <button onClick={() => handleHapusPeserta(showDeleteModal.id)} className="flex-1 bg-red-600 text-white py-2 rounded text-sm font-semibold">
-                  Hapus
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* MODAL BATALKAN KEGIATAN */}
-        {showCancelModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white p-6 rounded-xl w-full max-w-sm">
-              <h3 className="font-bold text-red-600 mb-2">Batalkan Kegiatan</h3>
-              <textarea placeholder="Alasan pembatalan..." className="w-full border p-2 rounded mb-4 text-sm" onChange={(e) => setAlasanBatal(e.target.value)} />
-              <div className="flex gap-2">
-                <button onClick={() => setShowCancelModal(false)} className="flex-1 border py-2 rounded text-sm font-semibold">
-                  Batal
-                </button>
-                <button onClick={handleBatalkan} className="flex-1 bg-red-600 text-white py-2 rounded text-sm font-semibold">
-                  Konfirmasi
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* modal batalkan kegiatan */}
+       <Modal
+          open={showCancelModal}
+          onClose={() => setShowCancelModal(false)}
+          title="Apakah Anda yakin ingin membatalkan kegiatan ini? Tindakan ini tidak dapat dibatalkan."
+          // description="Batalkan Kegiatan"
+          size="sm"
+          footer={
+            <>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowCancelModal(false)}
+              >
+                Batal
+              </Button>
+              <Button 
+                variant="danger" 
+                size="sm" 
+                onClick={handleBatalkan}
+              >
+                Konfirmasi
+              </Button>
+            </>
+          }
+        >
+          <Textarea
+            label="Alasan Pembatalan"
+            placeholder="Masukkan alasan pembatalan..."
+            rows={3}
+            value={alasanBatal}
+            onChange={(e) => setAlasanBatal(e.target.value)}
+          />
+        </Modal>
       </div>
 
       {/* ================================================================

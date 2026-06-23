@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import DataTable, { Column } from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
 import { formatRupiah, formatDate } from '@/lib/format';
+import { CheckCircle2, FileText, TrendingUp, XCircle } from 'lucide-react';
 
 export default function RiwayatClient({ initialData }: { initialData: any[] }) {
   const [selectedRow, setSelectedRow] = useState<any>(null);
@@ -69,20 +70,52 @@ const columns: Column<any>[] = [
             Kelola dan pantau seluruh catatan transaksi retribusi warga.
           </p>
         </div>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Pemasukan", value: formatRupiah(summary.totalPemasukan) },
-          { label: "Transaksi Berhasil", value: summary.berhasil },
-          { label: "Gagal/Expired", value: summary.gagal },
-          { label: "Rata-rata/Transaksi", value: formatRupiah(summary.rataRata) },
+          { 
+            label: "Total Pemasukan", 
+            value: formatRupiah(summary.totalPemasukan), 
+            icon: <FileText className="w-6 h-6" />, 
+            bg: "bg-blue-50", 
+            color: "text-blue-600" 
+          },
+          { 
+            label: "Transaksi Berhasil", 
+            value: summary.berhasil, 
+            icon: <CheckCircle2 className="w-6 h-6" />, 
+            bg: "bg-emerald-50", 
+            color: "text-emerald-600" 
+          },
+          { 
+            label: "Gagal/Expired", 
+            value: summary.gagal, 
+            icon: <XCircle className="w-6 h-6" />, 
+            bg: "bg-rose-50", 
+            color: "text-rose-600" 
+          },
+          { 
+            label: "Rata-rata/Transaksi", 
+            value: formatRupiah(summary.rataRata), 
+            icon: <TrendingUp className="w-6 h-6" />, 
+            bg: "bg-violet-50", 
+            color: "text-violet-600" 
+          },
         ].map((item, i) => (
-          <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-            <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">{item.label}</p>
-            <p className="text-lg font-bold text-slate-900">{item.value}</p>
+          <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+            <div className={`p-3 rounded-lg ${item.bg} ${item.color}`}>
+              {item.icon}
+            </div>
+            <div>
+              <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">
+                {item.label}
+              </p>
+              <p className="text-xl font-semibold text-[#1B4332]">
+                {item.value}
+              </p>
+            </div>
           </div>
         ))}
       </div>
-
       {/* TABEL */}
       <DataTable 
         columns={columns} 

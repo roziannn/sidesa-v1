@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Eye, Pencil, Trash2, Database, ChevronLeft, ChevronRight, Edit2, Edit } from "lucide-react";
+import { Eye, Trash2, Database, ChevronLeft, ChevronRight, Edit, Archive } from "lucide-react";
 import Button from "./ui/Button";
 
 export interface Column<T> {
@@ -17,23 +17,30 @@ interface DataTableProps<T> {
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   onView?: (row: T) => void;
+  onArchive?: (row: T) => void;
 }
 
-export default function DataTable<T>({ columns, data, isLoading = false, onEdit, onDelete, onView }: DataTableProps<T>) {
-  const hasActions = !!onEdit || !!onDelete || !!onView;
+export default function DataTable<T>({ 
+  columns, 
+  data, 
+  isLoading = false, 
+  onEdit, 
+  onDelete, 
+  onView, 
+  onArchive 
+}: DataTableProps<T>) {
   
-  // State Pagination
+  const hasActions = !!onEdit || !!onDelete || !!onView || !!onArchive;
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
   
-  // Logika Slicing Data
   const totalPages = Math.max(1, Math.ceil(data.length / rowsPerPage));
   const paginatedData = data.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   return (
-    <div className="w-full shadow-sm overflow-hidden rounded-lg">
+    <div className="w-full shadow-sm overflow-hidden rounded-lg border border-slate-200">
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left text-[13px] border-collapse">
           <thead>
@@ -79,35 +86,32 @@ export default function DataTable<T>({ columns, data, isLoading = false, onEdit,
                     <td className="px-4 py-3.5 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1.5">
                         {onView && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-7 w-7 border-blue-200 text-blue-600 hover:bg-blue-50"
-                            onClick={() => onView(row)}
-                          >
+                          <Button variant="outline" size="icon" className="h-7 w-7 border-blue-200 text-blue-600 hover:bg-blue-50" onClick={() => onView(row)}>
                             <Eye className="w-3.5 h-3.5" />
                           </Button>
                         )}
-                        
                         {onEdit && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-7 w-7 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                            onClick={() => onEdit(row)}
-                          >
+                          <Button variant="outline" size="icon" className="h-7 w-7 border-emerald-200 text-emerald-700 hover:bg-emerald-50" onClick={() => onEdit(row)}>
                             <Edit className="w-3.5 h-3.5" />
                           </Button>
                         )}
-                        
+                        {onArchive && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className={`h-7 w-7 border-amber-200 ${(row as any)?.status === 'archive' ? 'text-blue-600 bg-blue-50' : 'text-amber-600'} hover:bg-amber-50`}
+                        onClick={() => onArchive(row)}
+                        >
+                          {(row as any)?.status === 'archive' ? (
+                              <Database className="w-3.5 h-3.5" />
+                            ) : (
+                              <Archive className="w-3.5 h-3.5" /> 
+                            )}
+                          </Button>
+                        )}
                         {onDelete && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-7 w-7 border-red-200 text-red-600 hover:bg-red-50"
-                            onClick={() => onDelete(row)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />  
+                          <Button variant="outline" size="icon" className="h-7 w-7 border-red-200 text-red-600 hover:bg-red-50" onClick={() => onDelete(row)}>
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         )}
                       </div>
@@ -120,47 +124,23 @@ export default function DataTable<T>({ columns, data, isLoading = false, onEdit,
         </table>
       </div>
 
-      {/* FOOTER PAGINATION */}
       <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50">
-      <span className="text-xs text-slate-500">
-        {data.length > 0
-          ? `Menampilkan ${
-              (currentPage - 1) * rowsPerPage + 1
-            } - ${Math.min(
-              currentPage * rowsPerPage,
-              data.length
-            )} dari ${data.length} data`
-          : 'Tidak ada data'}
-      </span>
-
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => {
-            if (currentPage > 1) {
-              setCurrentPage((prev) => prev - 1);
-            }
-          }}
-          className="p-1.5 rounded hover:bg-slate-200"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-
-        <span className="text-xs font-semibold px-2">
-          {currentPage} / {Math.max(1, totalPages)}
+        <span className="text-xs text-slate-500">
+          {data.length > 0
+            ? `Menampilkan ${(currentPage - 1) * rowsPerPage + 1} - ${Math.min(currentPage * rowsPerPage, data.length)} dari ${data.length} data`
+            : 'Tidak ada data'}
         </span>
 
-        <button
-          onClick={() => {
-            if (currentPage < totalPages) {
-              setCurrentPage((prev) => prev + 1);
-            }
-          }}
-          className="p-1.5 rounded hover:bg-slate-200"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="p-1.5 rounded hover:bg-slate-200" disabled={currentPage === 1}>
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-xs font-semibold px-2">{currentPage} / {Math.max(1, totalPages)}</span>
+          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className="p-1.5 rounded hover:bg-slate-200" disabled={currentPage === totalPages}>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-    </div>
     </div>
   );
 }

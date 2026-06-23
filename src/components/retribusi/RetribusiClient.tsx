@@ -306,39 +306,55 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
           </Button>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          {
-            title: "TOTAL TAGIHAN",
-            val: formatRupiah(summary.total),
-            icon: <FileText className="h-4 w-4" />,
-          },
-          {
-            title: "SUDAH LUNAS",
-            val: formatRupiah(summary.lunas),
-            icon: <CheckCircle2 className="h-4 w-4" />,
-          },
-          {
-            title: "TUNGGAKAN",
-            val: formatRupiah(summary.belum),
-            icon: <AlertCircle className="h-4 w-4" />,
-          },
-          {
-            title: "JATUH TEMPO",
-            val: `${summary.jatuhTempoCount} Tagihan`,
-            icon: <Clock className="h-4 w-4" />,
-          },
-        ].map((card, index) => (
-          <div key={index} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <div>
-              <p className="mb-1 text-[10px] font-bold tracking-wider text-slate-500">{card.title}</p>
-              <p className="text-xl font-bold text-[#1B4332]">{card.val}</p>
-            </div>
-
-            <div className="rounded-full bg-slate-50 p-3 text-slate-400">{card.icon}</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {[
+        {
+          title: "TOTAL TAGIHAN",
+          val: formatRupiah(summary.total),
+          icon: <FileText className="w-6 h-6" />,
+          bg: "bg-blue-50",
+          color: "text-blue-600",
+        },
+        {
+          title: "SUDAH LUNAS",
+          val: formatRupiah(summary.lunas),
+          icon: <CheckCircle2 className="w-6 h-6" />,
+          bg: "bg-emerald-50",
+          color: "text-emerald-600",
+        },
+        {
+          title: "TUNGGAKAN",
+          val: formatRupiah(summary.belum),
+          icon: <AlertCircle className="w-6 h-6" />,
+          bg: "bg-amber-50",
+          color: "text-amber-600",
+        },
+        {
+          title: "JATUH TEMPO",
+          val: `${summary.jatuhTempoCount} Tagihan`,
+          icon: <Clock className="w-6 h-6" />,
+          bg: "bg-rose-50",
+          color: "text-rose-600",
+        },
+      ].map((card, index) => (
+        <div 
+          key={index} 
+          className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4"
+        >
+          <div className={`p-3 rounded-lg ${card.bg} ${card.color}`}>
+            {card.icon}
           </div>
-        ))}
-      </div>
+          <div>
+            <p className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">
+              {card.title}
+            </p>
+            <p className="text-xl font-semibold text-[#1B4332]">
+              {card.val}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
 
       {/* 2. FILTER BAR */}
       <div className="bg-white p-4 rounded-lg flex items-center justify-between shadow-sm">

@@ -34,14 +34,14 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
     { name: "Kabar Desa", href: "/dashboard/kabar-desa", icon: Newspaper },
 
     { name: "Audit Trail", href: "/dashboard/audit-trail", icon: Activity },
-    // { name: "Settings", href: "/dashboard/surat", icon: Globe,
-    //   children: [
-    //     { name: "Aplication Settings", href: "/dashboard/retribusi/riwayat" },
-    //     { name: "Banner Settings", href: "/dashboard/retribusi/riwayat" },
-    //     { name: "Menu Settings", href: "/dashboard/retribusi/riwayat" },
-    //     { name: "Page Settings", href: "/dashboard/retribusi" },
-    //   ],
-    //  },
+    { name: "Settings", href: "/dashboard/settings", icon: Globe,
+      children: [
+        { name: "Aplication Settings", href: "/dashboard/settings/application" },
+        { name: "Beranda Settings", href: "/dashboard/settings/beranda" },
+        { name: "Menu Settings", href: "/dashboard/settings/menu" },
+        { name: "Page Settings", href: "/dashboard/setting/page" },
+      ],
+     },
 
   ];
 
@@ -146,6 +146,7 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
           <div className="bg-emerald-600 p-2 rounded-md"><Building2 className="w-5 h-5 text-white" /></div>
           <div className="flex flex-col">
             <span className="font-bold text-white text-sm">Sistem Desa</span>
+            <span className="font-semibold text-white text-xs">Sukajadi Kuningan</span>
           </div>
         </div>
 

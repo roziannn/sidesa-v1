@@ -61,7 +61,14 @@ const columns: Column<any>[] = [
 
   return (
     <div className="space-y-6">
-      {/* SUMMARY BAR */}
+       <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Riwayat Retribusi
+          </h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Kelola dan pantau seluruh catatan transaksi retribusi warga.
+          </p>
+        </div>
       <div className="grid grid-cols-4 gap-4">
         {[
           { label: "Total Pemasukan", value: formatRupiah(summary.totalPemasukan) },

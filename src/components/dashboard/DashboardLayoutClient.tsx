@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { House, Users, HandHeart, Calendar, FileText, Wallet, Menu, X, LogOut, User, FileWarning, Building2, ChevronDown, ChevronRight, Activity, ThumbsUp } from "lucide-react";
+import { House, Users, HandHeart, Calendar, FileText, Wallet, Menu, X, LogOut, User, FileWarning, Building2, ChevronDown, ChevronRight, Activity, ThumbsUp, Settings, Globe2, Globe, Newspaper } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -31,7 +31,18 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
     },
     { name: "Pengaduan", href: "/dashboard/pengaduan", icon: FileWarning },
     { name: "Survey Kepuasan", href: "/dashboard/survey-kepuasan", icon: ThumbsUp },
+    { name: "Kabar Desa", href: "/dashboard/kabar-desa", icon: Newspaper },
+
     { name: "Audit Trail", href: "/dashboard/audit-trail", icon: Activity },
+    // { name: "Settings", href: "/dashboard/surat", icon: Globe,
+    //   children: [
+    //     { name: "Aplication Settings", href: "/dashboard/retribusi/riwayat" },
+    //     { name: "Banner Settings", href: "/dashboard/retribusi/riwayat" },
+    //     { name: "Menu Settings", href: "/dashboard/retribusi/riwayat" },
+    //     { name: "Page Settings", href: "/dashboard/retribusi" },
+    //   ],
+    //  },
+
   ];
 
   // Logic aktif rute yang lebih tangguh

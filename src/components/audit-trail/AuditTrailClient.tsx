@@ -2,7 +2,7 @@
 
 import DataTable, { Column } from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
-import { formatDate } from '@/lib/format';
+import { formatDateTime } from '@/lib/format';
 
 interface AuditTrail {
   id: string;
@@ -23,7 +23,7 @@ export default function AuditTrailClient({
     {
       label: 'Waktu',
       key: 'waktu',
-      render: (val) => formatDate(String(val)),
+      render: (val) => formatDateTime(String(val)),
     },
     {
       label: 'Pengguna',

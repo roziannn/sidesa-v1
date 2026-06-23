@@ -288,7 +288,14 @@ export default function RetribusiClient({ initialData }: { initialData: any[] })
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-800">Manajemen Retribusi</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Manajemen Retribusi
+          </h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Kelola dan manajemen data retribusi desa.
+          </p>
+        </div>
           <Button  onClick={() => setIsModalOpen(true)} variant="primary"
           leftIcon={
             

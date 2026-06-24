@@ -141,17 +141,16 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
   return (
     <div className="h-screen flex bg-[#f9fafb] text-slate-800">
       {/* Sidebar Desktop */}
-      <aside className="hidden md:flex flex-col w-64 h-full bg-[#0f172a] text-slate-300">
-        <div className="h-16 flex items-center px-6 gap-3 border-b border-[#1e293b]">
-          <div className="bg-emerald-600 p-2 rounded-md"><Building2 className="w-5 h-5 text-white" /></div>
-          <div className="flex flex-col">
-            <span className="font-bold text-white text-sm">Sistem Desa</span>
-            <span className="font-semibold text-white text-xs">Sukajadi Kuningan</span>
-          </div>
+    <aside className="hidden md:flex flex-col flex-shrink-0 w-64 h-full bg-[#0f172a] text-slate-300">
+      <div className="h-16 flex items-center px-6 gap-3 border-b border-[#1e293b] flex-shrink-0">
+        <div className="bg-emerald-600 p-2 rounded-md"><Building2 className="w-5 h-5 text-white" /></div>
+        <div className="flex flex-col">
+          <span className="font-bold text-white text-sm">Sistem Desa</span>
+          <span className="font-semibold text-white text-xs">Sukajadi Kuningan</span>
         </div>
+      </div>
 
-        {/* Navigasi Sidebar */}
-        <nav className="flex-1 px-3 py-6 space-y-1">
+      <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#1e293b] scrollbar-track-transparent">
         {menuItems.map((item) => (
           <SidebarItem 
             key={item.href} 
@@ -161,16 +160,13 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
           />
         ))}
       </nav>
-      <div className="pb-5 px-6">
+
+      <div className="px-6 flex-shrink-0 border-t border-[#1e293b] py-3">
         <p className="text-[13px] font-bold text-slate-400">
           Version v1.0.0
         </p>
-
-        <p className="text-[12px] text-slate-400 mt-1">
-          © {new Date().getFullYear()} SIDESA
-        </p>
       </div>
-      </aside>
+    </aside>
 
       {isMobileOpen && (
   <>

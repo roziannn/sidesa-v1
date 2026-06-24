@@ -44,13 +44,22 @@ export default function DataTable<T>({
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left text-[13px] border-collapse">
           <thead>
-            <tr className="bg-[#0f172a] text-slate-300 font-bold text-[10px] uppercase tracking-wider">
-              {columns.map((col, index) => (
-                <th key={index} className="px-4 py-4 whitespace-nowrap">{col.label}</th>
-              ))}
-              {hasActions && <th className="px-4 py-4 text-center whitespace-nowrap">Aksi</th>}
-            </tr>
-          </thead>
+          <tr className="bg-slate-900 text-slate-200 font-semibold text-[11px] uppercase tracking-wider border-b border-slate-700 shadow-sm">
+            {columns.map((col, index) => (
+              <th 
+                key={index} 
+                className="px-6 py-3 text-left whitespace-nowrap first:rounded-tl-lg last:rounded-tr-lg"
+              >
+                {col.label}
+              </th>
+            ))}
+            {hasActions && (
+              <th className="px-6 py-3 text-center whitespace-nowrap rounded-tr-lg">
+                Aksi
+              </th>
+            )}
+          </tr>
+        </thead>
 
           <tbody className="divide-y divide-slate-100 text-slate-700">
             {isLoading ? (

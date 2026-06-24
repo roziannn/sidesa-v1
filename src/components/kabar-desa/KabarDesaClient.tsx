@@ -9,9 +9,14 @@ import { formatShortDate } from '@/lib/format';
 import { supabaseClient } from '@/lib/supabase/client';
 import { useToast } from '@/hooks/useToast';
 import Button from '@components/ui/Button';
+import ConfirmModal from '@/components/ConfirmModal'; 
 
 export default function KabarDesaClient({ initialData }: { initialData: any[] }) {
   const [data, setData] = useState(initialData);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  
   const router = useRouter();
   const { showToast } = useToast();
 
@@ -21,7 +26,7 @@ export default function KabarDesaClient({ initialData }: { initialData: any[] })
     return acc;
   }, {});
 
-  const topKategori = Object.entries(kategoriCounts).sort((a: any, b: any) => b[1] - a[1])[0];
+  const topKategori = Object.entries(kategoriCounts).sort((a: any, b: any) => (b[1] as number) - (a[1] as number))[0];
   const labelKategori = topKategori ? (topKategori[0] as string).toUpperCase() : "-";
   const valKategori = topKategori ? (topKategori[1] as number) : 0;
 
@@ -59,25 +64,35 @@ export default function KabarDesaClient({ initialData }: { initialData: any[] })
 
   const handleEdit = (row: any) => router.push(`/dashboard/kabar-desa/${row.id}/edit`);
 
-  const handleArchive = async (row: any) => {
-    const isArchived = row.status === 'archived';
-    const newStatus = isArchived ? 'draft' : 'archived';
-    const actionName = isArchived ? 'memulihkan' : 'mengarsipkan';
+  const openArchiveModal = (row: any) => {
+    setSelectedRow(row);
+    setIsModalOpen(true);
+  };
 
-    if (confirm(`Yakin ingin ${actionName} kabar "${row.judul}"?`)) {
-      const { error } = await supabaseClient
-        .from('kabar_desa')
-        .update({ status: newStatus })
-        .eq('id', row.id);
+  const handleArchive = async () => {
+    if (!selectedRow) return;
 
-      if (error) {
-        showToast('error', 'Gagal', `Gagal ${actionName} data.`);
-        return;
-      }
+    const isarchive = selectedRow.status === 'archive';
+    const newStatus = isarchive ? 'draft' : 'archive';
+    
+    setLoading(true);
+    const { error } = await supabaseClient
+      .from('kabar_desa')
+      .update({ status: newStatus })
+      .eq('id', selectedRow.id);
 
-      showToast('success', 'Berhasil', `Data berhasil ${isArchived ? 'dipulihkan' : 'diarsipkan'}.`);
-      setData(data.map((item) => item.id === row.id ? { ...item, status: newStatus } : item));
+    if (error) {
+      showToast('error', 'Gagal', 'Gagal memproses data.');
+      setLoading(false);
+      return;
     }
+
+    showToast('success', 'Berhasil', `Data berhasil ${isarchive ? 'dipulihkan' : 'diarsipkan'}.`);
+    setData(data.map((item) => item.id === selectedRow.id ? { ...item, status: newStatus } : item));
+    
+    setLoading(false);
+    setIsModalOpen(false);
+    setSelectedRow(null);
   };
 
   return (
@@ -113,7 +128,23 @@ export default function KabarDesaClient({ initialData }: { initialData: any[] })
         columns={columns} 
         data={data} 
         onEdit={handleEdit} 
-        onArchive={handleArchive}    
+        onArchive={openArchiveModal}    
+      />
+
+      <ConfirmModal
+        isOpen={isModalOpen}
+        title={selectedRow?.status === 'archive' ? "Pulihkan Kabar" : "Arsipkan Kabar"}
+        message={
+          <>
+            Apakah Anda yakin ingin {selectedRow?.status === 'archive' ? 'memulihkan' : 'mengarsipkan'} kabar 
+            <span className="font-bold text-slate-900"> "{selectedRow?.judul}"</span>?
+          </>
+        }
+        confirmLabel={selectedRow?.status === 'archive' ? "Pulihkan" : "Arsipkan"}
+        confirmVariant={selectedRow?.status === 'archive' ? "primary" : "warning"}
+        isLoading={loading}
+        onConfirm={handleArchive}
+        onCancel={() => setIsModalOpen(false)}
       />
     </div>
   );

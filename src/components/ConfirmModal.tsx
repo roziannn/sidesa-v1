@@ -27,12 +27,9 @@ export default function ConfirmModal({
   onCancel,
 }: ConfirmModalProps) {
   
-  // Ref untuk mengunci fokus keyboard di dalam elemen modal
+  // ref untuk lock fokus keyboard di dalam elemen modal
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // ----------------------------------------------------------------
-  // AKSESIBILITAS: Handle Tekan Tombol Escape & Trap Focus
-  // ----------------------------------------------------------------
   useEffect(() => {
     if (!isOpen) return;
 

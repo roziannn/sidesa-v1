@@ -11,8 +11,8 @@ import {
 import { cn } from '@/lib/utils';
 
 export interface UploadedFile {
-  file: File;
-  preview: string;
+  file: File | null;
+  preview?: string;
   isPdf: boolean;
 }
 
@@ -231,100 +231,45 @@ export default function FileUpload({
         </div>
       )}
 
-      {files.length >
-        0 && (
-        <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-3">
-          {files.map(
-            (
-              item,
-              index
-            ) => (
-              <div
-                key={index}
-                className="
-                  relative
-
-                  flex
-                  items-center
-                  gap-3
-
-                  rounded-xl
-                  border
-                  border-slate-200
-
-                  bg-white
-
-                  p-3
-
-                  shadow-sm
-                "
+      {files.length > 0 && (
+        <div className="pt-2">
+          {files.map((item, index) => (
+            <div 
+              key={index} 
+              className="relative group w-full max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+            >
+              {item.isPdf ? (
+                <div className="flex h-48 w-full items-center justify-center bg-red-50 text-red-600">
+                  <File className="h-16 w-16" />
+                </div>
+              ) : (
+                <img
+                  src={item.preview || ''}
+                  alt="preview"
+                  className="h-48 w-full object-cover"
+                />
+              )}
+              
+              <button
+                type="button"
+                onClick={() => removeFile(index)}
+                className="absolute top-2 right-2 rounded-full bg-black/50 p-1.5 text-white backdrop-blur-sm transition hover:bg-red-500"
               >
-                {item.isPdf ? (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600">
-                    <File className="h-6 w-6" />
-                  </div>
-                ) : (
-                  <img
-                    src={
-                      item.preview
-                    }
-                    alt="preview"
-                    className="
-                      h-12
-                      w-12
-                      shrink-0
-                      rounded-lg
-                      border
-                      object-cover
-                    "
-                  />
-                )}
+                <X className="h-4 w-4" />
+              </button>
 
-                <div className="min-w-0 flex-1">
+              {item.file && (
+                <div className="p-3 bg-slate-50 border-t border-slate-100">
                   <p className="truncate text-xs font-semibold text-slate-700">
-                    {
-                      item.file
-                        .name
-                    }
+                    {item.file.name}
                   </p>
-
                   <p className="text-[10px] text-slate-400">
-                    {(
-                      item.file
-                        .size /
-                      1024 /
-                      1024
-                    ).toFixed(
-                      2
-                    )}{' '}
-                    MB
+                    {(item.file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    removeFile(
-                      index
-                    )
-                  }
-                  className="
-                    rounded-full
-                    p-1
-
-                    text-slate-400
-
-                    transition
-
-                    hover:bg-slate-100
-                    hover:text-red-500
-                  "
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            )
-          )}
+              )}
+            </div>
+          ))}
         </div>
       )}
 

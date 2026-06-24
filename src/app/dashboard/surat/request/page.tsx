@@ -136,21 +136,31 @@ useEffect(() => {
 
       // 1. Upload dokumen pendukung jika ada ke Supabase Storage
       for (const item of files) {
-        const fileExt = item.file.name.split(".").pop();
-        const fileName = `${selectedProfile.id}/${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-        const filePath = `${fileName}`;
+      if (!item.file) continue; 
 
-        const { error: uploadError } = await supabaseClient.storage.from("surat-dokumen").upload(filePath, item.file, { cacheControl: "3600", upsert: true });
+      const fileExt = item.file.name.split(".").pop();
+      const fileName = `${selectedProfile.id}/${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+      const filePath = `${fileName}`;
 
-        if (uploadError) throw uploadError;
+      // Sekarang item.file sudah dipastikan tidak null
+      const { error: uploadError } = await supabaseClient.storage
+        .from("surat-dokumen")
+        .upload(filePath, item.file, { 
+          cacheControl: "3600", 
+          upsert: true 
+        });
 
-        // Ambil Public URL hasil upload
-        const { data: urlData } = supabaseClient.storage.from("surat-dokumen").getPublicUrl(filePath);
+      if (uploadError) throw uploadError;
 
-        if (urlData?.publicUrl) {
-          uploadedUrls.push(urlData.publicUrl);
-        }
+      // Ambil Public URL hasil upload
+      const { data: urlData } = supabaseClient.storage
+        .from("surat-dokumen")
+        .getPublicUrl(filePath);
+
+      if (urlData?.publicUrl) {
+        uploadedUrls.push(urlData.publicUrl);
       }
+    }
 
       // 2. Insert record baru ke tabel 'surat'
       const { data: newSurat, error: insertError } = await supabaseClient

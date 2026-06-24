@@ -39,7 +39,7 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
         { name: "Aplication Settings", href: "/dashboard/settings/application" },
         { name: "Beranda Settings", href: "/dashboard/settings/beranda" },
         { name: "Menu Settings", href: "/dashboard/settings/menu" },
-        { name: "Page Settings", href: "/dashboard/setting/page" },
+        // { name: "Page Settings", href: "/dashboard/setting/page" },
       ],
      },
 

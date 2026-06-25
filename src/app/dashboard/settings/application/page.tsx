@@ -6,28 +6,59 @@ import { useToast } from '@/hooks/useToast';
 import { supabaseClient } from '@/lib/supabase/client';
 import Button from '@components/ui/Button';
 import Input from '@components/ui/Input';
+import { SettingsFormSkeleton } from '@/components/loading/PageSkeleton';
+
+interface AppSettings {
+  app_name: string;
+  nama_desa: string;
+  alamat_kantor: string;
+  kontak_support: string;
+  is_maintenance: boolean;
+  is_debug: boolean;
+  version: string;
+}
+
+interface ApiKey {
+  key_name: string;
+  key_value: string;
+}
 
 export default function ApplicationSettings() {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'app' | 'keys'>('app');
   const [loading, setLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   
-  const [settings, setSettings] = useState<any>({
+  const [settings, setSettings] = useState<AppSettings>({
     app_name: '', nama_desa: '', alamat_kantor: '', kontak_support: '', 
     is_maintenance: false, is_debug: false, version: '1.0.0'
   });
-  const [apiKeys, setApiKeys] = useState<{ key_name: string; key_value: string }[]>([]);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
 
   const fetchData = async () => {
-    const { data: setRes } = await supabaseClient.from('settings').select('*').eq('id', 1).single();
-    const { data: keyRes } = await supabaseClient.from('app_keys').select('*');
-    if (setRes) setSettings(setRes);
-    if (keyRes) setApiKeys(keyRes);
+    try {
+      const { data: setRes } = await supabaseClient.from('settings').select('*').eq('id', 1).single();
+      const { data: keyRes } = await supabaseClient.from('app_keys').select('*');
+      if (setRes) {
+        setSettings({
+          app_name: setRes.app_name ?? '',
+          nama_desa: setRes.nama_desa ?? '',
+          alamat_kantor: setRes.alamat_kantor ?? '',
+          kontak_support: setRes.kontak_support ?? '',
+          is_maintenance: Boolean(setRes.is_maintenance),
+          is_debug: Boolean(setRes.is_debug),
+          version: setRes.version ?? '1.0.0',
+        });
+      }
+      if (keyRes) setApiKeys(keyRes);
+    } finally {
+      setIsInitialLoading(false);
+    }
   };
+
+  useEffect(() => {
+    void fetchData();
+  }, []);
 
   const handleSave = async () => {
   setLoading(true);
@@ -49,13 +80,17 @@ export default function ApplicationSettings() {
     
     showToast('success', 'Berhasil', 'Pengaturan Aplikasi telah diperbarui.');
     fetchData(); 
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error(e); 
-    showToast('error', 'Gagal', e.message || 'Terjadi kesalahan sistem.');
+    showToast('error', 'Gagal', e instanceof Error ? e.message : 'Terjadi kesalahan sistem.');
   } finally {
     setLoading(false);
   }
 };
+
+  if (isInitialLoading) {
+    return <SettingsFormSkeleton />;
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

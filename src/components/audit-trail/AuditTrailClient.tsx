@@ -6,7 +6,7 @@ import { formatDateTime } from '@/lib/format';
 
 interface AuditTrail {
   id: string;
-  waktu: Date;
+  waktu: string;
   pengguna: string;
   modul: string;
   aktivitas: string;

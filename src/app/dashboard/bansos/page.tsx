@@ -1,9 +1,10 @@
 import React, { Suspense } from "react";
-import { HandHeart, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import BansosClient from "@/components/bansos/BansosClient";
 import Link from "next/link";
 import Button from "@components/ui/Button";
+import { DashboardPageSkeleton } from "@/components/loading/PageSkeleton";
 
 // Memastikan Next.js selalu mengambil data teranyar langsung dari database (No Cache)
 export const revalidate = 0;
@@ -107,15 +108,5 @@ async function BansosFetchData() {
 
 // Komponen Shimmer Placeholder Transisi
 function BansosLoadingSkeleton() {
-  return (
-    <div className="space-y-8 animate-pulse">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white h-32 rounded-xl border border-slate-200 p-4 shadow-sm" />
-        ))}
-      </div>
-      <div className="bg-white h-16 rounded-xl border border-slate-200" />
-      <div className="bg-white h-64 rounded-xl border border-slate-200" />
-    </div>
-  );
+  return <DashboardPageSkeleton statsCount={4} tableRows={8} />;
 }

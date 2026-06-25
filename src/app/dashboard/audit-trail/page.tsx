@@ -1,54 +1,18 @@
 import AuditTrailClient from '@/components/audit-trail/AuditTrailClient';
-import { History } from 'lucide-react';
+import { listAuditTrails } from '@/lib/audit-trail/server';
 
 async function getData() {
-  return [
-    {
-      id: '1',
-      waktu: new Date('2026-06-12T08:15:00'),
-      pengguna: 'Admin RT',
-      modul: 'Pengaduan',
-      aktivitas: 'Mengubah status pengaduan menjadi Diproses',
-      ipAddress: '192.168.1.10',
-      status: 'berhasil',
-    },
-    {
-      id: '2',
-      waktu: new Date('2026-06-12T08:30:00'),
-      pengguna: 'Admin RW',
-      modul: 'Surat',
-      aktivitas: 'Menyetujui Surat Keterangan Domisili',
-      ipAddress: '192.168.1.11',
-      status: 'berhasil',
-    },
-    {
-      id: '3',
-      waktu: new Date('2026-06-12T09:00:00'),
-      pengguna: 'Operator Desa',
-      modul: 'Bansos',
-      aktivitas: 'Gagal memperbarui data penerima bantuan',
-      ipAddress: '192.168.1.12',
-      status: 'gagal',
-    },
-    {
-      id: '4',
-      waktu: new Date('2026-06-12T09:20:00'),
-      pengguna: 'Admin RT',
-      modul: 'Penduduk',
-      aktivitas: 'Menambahkan data penduduk baru',
-      ipAddress: '192.168.1.15',
-      status: 'berhasil',
-    },
-    {
-      id: '5',
-      waktu: new Date('2026-06-12T10:05:00'),
-      pengguna: 'Sekretaris Desa',
-      modul: 'Surat',
-      aktivitas: 'Menolak permohonan surat usaha',
-      ipAddress: '192.168.1.18',
-      status: 'berhasil',
-    },
-  ];
+  const records = await listAuditTrails();
+
+  return records.map((item) => ({
+    id: item.id,
+    waktu: item.created_at,
+    pengguna: item.user_role,
+    modul: item.module,
+    aktivitas: item.activity,
+    ipAddress: item.ip_address ?? '-',
+    status: item.status,
+  }));
 }
 
 export default async function AuditTrailPage() {

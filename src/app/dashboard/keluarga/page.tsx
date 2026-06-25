@@ -1,15 +1,14 @@
 import React, { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import KeluargaClient from "@/components/keluarga/KeluargaClient";
+import { DashboardPageSkeleton } from "@/components/loading/PageSkeleton";
 
 // Memastikan Next.js selalu mengambil data teranyar langsung dari database (No Cache)
 export const revalidate = 0;
 
 export default function KeluargaPage() {
   return (
-    // Kita gunakan fallback sederhana atau kosong saja karena Next.js akan otomatis
-    // menggunakan file loading.tsx yang ada di dalam folder keluarga jika sudah dibuat.
-    <Suspense fallback={<div className="p-4 text-sm text-slate-500 animate-pulse">Memuat data halaman...</div>}>
+    <Suspense fallback={<DashboardPageSkeleton statsCount={1} showFilters={true} tableRows={8} />}>
       <KeluargaServerFetch />
     </Suspense>
   );
@@ -40,13 +39,13 @@ async function KeluargaServerFetch() {
       <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm space-y-2">
         <p className="font-bold">Gagal memuat data Kartu Keluarga.</p>
         <p className="text-xs text-red-600">Pesan Sistem: {error?.message || "Data kosong"}</p>
-        <p className="text-xs text-slate-400 font-mono mt-1">Saran: Pastikan tabel 'keluarga' dan 'anggota' sudah memiliki data atau RLS Policy di Supabase diizinkan.</p>
+        <p className="text-xs text-slate-400 font-mono mt-1">Saran: Pastikan tabel &apos;keluarga&apos; dan &apos;anggota&apos; sudah memiliki data atau RLS Policy di Supabase diizinkan.</p>
       </div>
     );
   }
 
   // 2. Transformasi data mentah dari Supabase ke format properti yang diminta oleh KeluargaClient
-  const cleanedData = keluargaRaw.map((k: any) => ({
+  const cleanedData = keluargaRaw.map((k) => ({
     id: k.id,
     nomor_kk: k.no_kk, // Memetakan 'no_kk' dari database ke 'nomor_kk' milik DataTable
     nama_kepala: k.nama_kepala || "Belum Diisi", // Mengambil kolom nama_kepala string langsung

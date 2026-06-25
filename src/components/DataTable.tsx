@@ -52,21 +52,21 @@ export default function DataTable<T>({
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   return (
-    <div className="w-full overflow-hidden rounded-lg border border-slate-200 shadow-sm">
+    <div className="w-full overflow-hidden border border-slate-200 shadow-sm">
       <div className="w-full overflow-x-auto">
         <table className="w-full border-collapse text-left text-[13px]">
           <thead>
-            <tr className="border-b border-slate-700 bg-slate-900 text-[11px] font-semibold uppercase tracking-wider text-slate-200 shadow-sm">
+            <tr className="bg-slate-600 text-xs font-semibold uppercase text-slate-200">
               {columns.map((col, index) => (
                 <th
                   key={index}
-                  className="px-6 py-3 text-left whitespace-nowrap first:rounded-tl-lg last:rounded-tr-lg"
+                  className="px-6 py-3 text-left whitespace-nowrap first: last:"
                 >
                   {col.label}
                 </th>
               ))}
               {hasActions && (
-                <th className="rounded-tr-lg px-6 py-3 text-center whitespace-nowrap">
+                <th className=" px-6 py-3 text-center whitespace-nowrap">
                   Aksi
                 </th>
               )}
@@ -93,9 +93,9 @@ export default function DataTable<T>({
                   {hasActions && (
                     <td className="px-4 py-4 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-2">
-                        <Skeleton className="h-7 w-7 rounded-md" />
-                        <Skeleton className="h-7 w-7 rounded-md" />
-                        <Skeleton className="h-7 w-7 rounded-md" />
+                        <Skeleton className="h-7 w-7 " />
+                        <Skeleton className="h-7 w-7 " />
+                        <Skeleton className="h-7 w-7 " />
                       </div>
                     </td>
                   )}
@@ -220,7 +220,7 @@ export default function DataTable<T>({
         <div className="flex items-center gap-1">
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            className="rounded p-1.5 hover:bg-slate-200 disabled:opacity-50"
+            className=" p-1.5 hover:bg-slate-200 disabled:opacity-50"
             disabled={isLoading || safeCurrentPage === 1}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -230,7 +230,7 @@ export default function DataTable<T>({
           </span>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            className="rounded p-1.5 hover:bg-slate-200 disabled:opacity-50"
+            className=" p-1.5 hover:bg-slate-200 disabled:opacity-50"
             disabled={isLoading || safeCurrentPage === totalPages}
           >
             <ChevronRight className="h-4 w-4" />

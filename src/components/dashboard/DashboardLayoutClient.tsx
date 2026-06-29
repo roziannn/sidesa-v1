@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { House, Users, HandHeart, Calendar, FileText, Wallet, Menu, X, LogOut, User, FileWarning, Building2, ChevronDown, ChevronRight, Activity, ThumbsUp, Settings, Globe2, Globe, Newspaper } from "lucide-react";
+import { House, Users, HandHeart, Calendar, FileText, Wallet, Menu, X, LogOut, User, FileWarning, Building2, ChevronDown, ChevronRight, Activity, ThumbsUp, Globe, Newspaper, MapIcon } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -32,9 +32,11 @@ export default function DashboardLayoutClient({ children, userProfile }: any) {
     { name: "Pengaduan", href: "/dashboard/pengaduan", icon: FileWarning },
     { name: "Survey Kepuasan", href: "/dashboard/survey-kepuasan", icon: ThumbsUp },
     { name: "Kabar Desa", href: "/dashboard/kabar-desa", icon: Newspaper },
+    { name: "GIS", href: "/dashboard/gis", icon: MapIcon},
 
     { name: "Audit Trail", href: "/dashboard/audit-trail", icon: Activity },
     { name: "Settings", href: "/dashboard/settings", icon: Globe,
+
       children: [
         { name: "Aplication Settings", href: "/dashboard/settings/application" },
         { name: "Beranda Settings", href: "/dashboard/settings/beranda" },

@@ -216,18 +216,18 @@ return (
       {/* PENERIMA */}
       <div>
         <SelectSearch
-            label="Pilih Penerima (Kepala Keluarga)"
-            required
-            placeholder="Cari nama kepala keluarga..."
-            value={penerimaId}
-            onChange={setPenerimaId}
-            options={listWarga.map((w) => ({
-              value: w.id,
-              label: `${w.nama.toUpperCase()} (RT ${w.rt || '00'}/RW ${
-                w.rw || '00'
-              })`,
-            }))}
-          />
+          label="Pilih Penerima (Kepala Keluarga)"
+          required
+          placeholder="Cari nama kepala keluarga..."
+          value={penerimaId}
+          onChange={setPenerimaId}
+          options={listWarga.map((w) => ({
+            value: w.id,
+            label: `${w.nama.toUpperCase()} (RT ${w.rt || '00'}/RW ${
+              w.rw || '00'
+            })`,
+          }))}
+        />
       </div>
 
       {/* NOMINAL */}

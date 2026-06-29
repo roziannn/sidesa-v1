@@ -77,12 +77,6 @@ export default function StatisticsCards({
                 <Icon className="h-6 w-6" />
               </div>
             </div>
-
-            <div className="mt-5 border-t border-slate-100 pt-3">
-              <span className="text-xs text-slate-400">
-                Data GIS SIDESA
-              </span>
-            </div>
           </div>
         );
       })}

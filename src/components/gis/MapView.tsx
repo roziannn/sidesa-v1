@@ -1,6 +1,7 @@
 "use client";
 
-import { memo, useEffect } from "react";
+import { memo, useEffect, useState } from "react";
+import { CircleDashed, Layers3, List, Pin } from "lucide-react";
 import {
   MapContainer,
   Marker,
@@ -18,10 +19,12 @@ import "leaflet/dist/leaflet.css";
 import {
   DEFAULT_CENTER,
   DEFAULT_ZOOM,
-  calculateBounds,
-  createMarkerIcon,
   getCategoryColor,
 } from "@/lib/gis/gis";
+import {
+  calculateBounds,
+  createMarkerIcon,
+} from "@/lib/gis/gis-client";
 
 import {
   LayerVisibility,
@@ -29,20 +32,29 @@ import {
   MapPolygon,
 } from "@/types/gis";
 import MarkerPopup from "@/components/gis/MarkerPopup";
+import SelectedDetailCard from "@/components/gis/SelectedDetailCard";
+import LayerControl from "@/components/gis/LayerControl";
+import Legend from "@/components/gis/Legend";
 
 interface MapViewProps {
   markers: MapMarker[];
   polygons?: MapPolygon[];
 
   layers: LayerVisibility;
+  onLayersChange: (layers: LayerVisibility) => void;
+  categoryCounts?: Record<string, number>;
 
   loading?: boolean;
 
   selectedMarker?: string;
+  selectedMarkerData?: MapMarker;
+  selectedPolygonData?: MapPolygon;
 
   onMarkerClick?: (marker: MapMarker) => void;
+  onMarkerHover?: (marker?: MapMarker) => void;
 
   onPolygonClick?: (polygon: MapPolygon) => void;
+  onPolygonHover?: (polygon?: MapPolygon) => void;
 
   className?: string;
 }
@@ -92,12 +104,24 @@ function MapView({
   markers,
   polygons = [],
   layers,
+  onLayersChange,
+  categoryCounts = {},
   loading = false,
   selectedMarker,
+  selectedMarkerData,
+  selectedPolygonData,
   onMarkerClick,
+  onMarkerHover,
   onPolygonClick,
+  onPolygonHover,
   className,
 }: MapViewProps) {
+  const [showSelectedDetail, setShowSelectedDetail] =
+    useState(false);
+  const [showLayerControl, setShowLayerControl] =
+    useState(false);
+  const [showLegend, setShowLegend] = useState(false);
+
   return (
     <div
       className={[
@@ -145,6 +169,12 @@ function MapView({
                 click() {
                   onMarkerClick?.(marker);
                 },
+                mouseover() {
+                  onMarkerHover?.(marker);
+                },
+                mouseout() {
+                  onMarkerHover?.(undefined);
+                },
               }}
             >
               <Tooltip direction="top">
@@ -175,6 +205,12 @@ function MapView({
               eventHandlers={{
                 click() {
                   onPolygonClick?.(polygon);
+                },
+                mouseover() {
+                  onPolygonHover?.(polygon);
+                },
+                mouseout() {
+                  onPolygonHover?.(undefined);
                 },
               }}
             >
@@ -233,15 +269,84 @@ function MapView({
         </div>
       )}
 
+      <div className="absolute left-4 top-4 z-[999]">
+        <div className="flex justify-start">
+          <button
+            type="button"
+            onClick={() =>
+              setShowLayerControl((previous) => !previous)
+            }
+            className="inline-flex items-center gap-2 rounded-xl border border-white/70 bg-white/95 px-3 py-2 text-xs font-semibold text-slate-700 shadow-lg backdrop-blur hover:bg-white"
+          >
+            <Layers3 className="h-4 w-4 text-emerald-600" />
+            Layer
+          </button>
+        </div>
+
+        {showLayerControl && (
+          <div className="mt-3 w-64 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-2xl backdrop-blur">
+            <div className="mb-3">
+              <h3 className="text-sm font-semibold text-slate-900">
+                Kontrol Layer
+              </h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Pilih kategori yang ingin tampil di peta.
+              </p>
+            </div>
+
+            <LayerControl
+              layers={layers}
+              onChange={onLayersChange}
+              compact
+            />
+          </div>
+        )}
+      </div>
+
       {/* ===========================
           Selected Marker Badge
       ============================ */}
 
       {selectedMarker && (
-        <div className="absolute right-4 top-4 z-[999] rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg">
-          Marker dipilih : {selectedMarker}
+        <div
+          className="absolute right-4 top-4 z-[999]"
+          onMouseEnter={() => setShowSelectedDetail(true)}
+          onMouseLeave={() => setShowSelectedDetail(false)}
+        >
+          <div className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-lg">
+            Marker dipilih : {selectedMarker}
+          </div>
+
+          {showSelectedDetail &&
+            (selectedMarkerData || selectedPolygonData) && (
+              <div className="mt-3 w-[360px] max-w-[calc(100vw-3rem)]">
+                <SelectedDetailCard
+                  marker={selectedMarkerData}
+                  polygon={selectedPolygonData}
+                />
+              </div>
+            )}
         </div>
       )}
+
+      <div className="absolute bottom-14 left-4 z-[999] max-w-[calc(100%-2rem)]">
+        <button
+          type="button"
+          onClick={() =>
+            setShowLegend((previous) => !previous)
+          }
+          className="inline-flex items-center gap-2 rounded-xl border border-white/70 bg-white/95 px-3 py-2 text-xs font-semibold text-slate-700 shadow-lg backdrop-blur hover:bg-white"
+        >
+          <CircleDashed className="h-4 w-4 text-emerald-600" />
+          Legenda
+        </button>
+
+        {showLegend && (
+          <div className="mt-3 w-56">
+            <Legend compact categoryCounts={categoryCounts} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

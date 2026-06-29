@@ -3,18 +3,17 @@
 import dynamic from "next/dynamic";
 import { useMemo, useRef, useState } from "react";
 import {
-  Building2,
   Layers3,
+  Map,
   MapPinned,
-  Sparkles,
 } from "lucide-react";
 
 import LoadingMap from "@/components/gis/LoadingMap";
-import LayerControl from "@/components/gis/LayerControl";
-import Legend from "@/components/gis/Legend";
 import MapSidebar from "@/components/gis/MapSidebar";
 import MapToolbar from "@/components/gis/MapToolbar";
 import StatisticCards from "@/components/gis/StatisticCards";
+import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
 import { filterMarkers } from "@/lib/gis/gis";
 import {
   GisStatistics,
@@ -53,6 +52,25 @@ const DEFAULT_LAYERS: LayerVisibility = {
   other: true,
   polygon: true,
 };
+
+const categoryOptions: {
+  value: MapFilter["category"];
+  label: string;
+}[] = [
+  { value: "all", label: "Semua kategori" },
+  { value: "office", label: "Kantor" },
+  { value: "hospital", label: "Rumah sakit" },
+  { value: "school", label: "Sekolah" },
+  { value: "mosque", label: "Masjid" },
+  { value: "posyandu", label: "Posyandu" },
+  { value: "umkm", label: "UMKM" },
+  { value: "tourism", label: "Wisata" },
+  { value: "complaint", label: "Pengaduan" },
+  { value: "resident", label: "Permukiman" },
+  { value: "other", label: "Lainnya" },
+];
+
+const areaOptions = ["all", "Kuningan", "Cigugur", "Cilimus"];
 
 const kuninganStatistics: GisStatistics = {
   totalPenduduk: 387420,
@@ -309,6 +327,9 @@ export default function GisClient() {
   const [selectedMarkerId, setSelectedMarkerId] = useState<string>();
   const [selectedPolygonId, setSelectedPolygonId] = useState<string>();
   const [userLocationMarker, setUserLocationMarker] = useState<MapMarker>();
+  const [hoveredMarkerId, setHoveredMarkerId] = useState<string>();
+  const [hoveredPolygonId, setHoveredPolygonId] = useState<string>();
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   const mapMarkers = useMemo(() => {
     return userLocationMarker
@@ -326,11 +347,26 @@ export default function GisClient() {
     [mapMarkers, selectedMarkerId]
   );
 
+  const hoveredMarker = useMemo(
+    () => mapMarkers.find((marker) => marker.id === hoveredMarkerId),
+    [hoveredMarkerId, mapMarkers]
+  );
+
   const selectedPolygon = useMemo(
     () =>
       kuninganPolygons.find((polygon) => polygon.id === selectedPolygonId),
     [selectedPolygonId]
   );
+
+  const hoveredPolygon = useMemo(
+    () =>
+      kuninganPolygons.find((polygon) => polygon.id === hoveredPolygonId),
+    [hoveredPolygonId]
+  );
+
+  const activeMarker = hoveredMarker ?? selectedMarker;
+  const activePolygon =
+    hoveredMarker ? undefined : hoveredPolygon ?? selectedPolygon;
 
   const categoryCounts = useMemo(() => {
     return mapMarkers.reduce<Record<string, number>>(
@@ -344,12 +380,23 @@ export default function GisClient() {
     );
   }, [mapMarkers]);
 
+  const activeFilterCount = useMemo(() => {
+    return [
+      filter.category !== "all",
+      filter.dusun !== "all",
+      filter.rw !== "all",
+      filter.rt !== "all",
+    ].filter(Boolean).length;
+  }, [filter]);
+
   const handleReset = () => {
     setFilter(DEFAULT_FILTER);
     setLayers(DEFAULT_LAYERS);
     setSelectedMarkerId(undefined);
     setSelectedPolygonId(undefined);
     setUserLocationMarker(undefined);
+    setHoveredMarkerId(undefined);
+    setHoveredPolygonId(undefined);
   };
 
   const handleMyLocation = () => {
@@ -399,9 +446,9 @@ export default function GisClient() {
       <section className="overflow-hidden rounded-[28px] border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f0f9ff_55%,#ffffff_100%)] shadow-sm">
         <div className="grid gap-6 px-6 py-7 lg:grid-cols-[1.4fr_0.8fr] lg:px-8">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
-              <Sparkles className="h-3.5 w-3.5" />
-              Demo GIS Kabupaten Kuningan
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-3 py-1 text-xs font-bold uppercase text-emerald-700">
+              <Map className="h-3.5 w-3.5" />
+              GIS Kabupaten Kuningan
             </div>
 
             <div className="space-y-3">
@@ -449,7 +496,7 @@ export default function GisClient() {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4">
+            {/* <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4">
               <div className="rounded-2xl bg-amber-100 p-3 text-amber-700">
                 <Building2 className="h-5 w-5" />
               </div>
@@ -462,7 +509,7 @@ export default function GisClient() {
                   Dipakai untuk menampilkan batas area prioritas dan tematik.
                 </p>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
@@ -474,57 +521,167 @@ export default function GisClient() {
         onKeywordChange={(keyword) =>
           setFilter((previous) => ({ ...previous, keyword }))
         }
+        onOpenFilter={() => setIsFilterModalOpen(true)}
         onReset={handleReset}
         onMyLocation={handleMyLocation}
         onFullscreen={handleFullscreen}
+        activeFilterCount={activeFilterCount}
       />
 
       <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
         <div className="space-y-6">
           <MapSidebar
-            filter={filter}
             markers={filteredMarkers}
             selectedMarkerId={selectedMarkerId}
-            selectedMarker={selectedMarker}
-            selectedPolygon={selectedPolygon}
-            onFilterChange={setFilter}
+            selectedMarker={activeMarker}
+            selectedPolygon={activePolygon}
             onMarkerSelect={(marker) => {
               setSelectedPolygonId(undefined);
               setSelectedMarkerId(marker.id);
             }}
           />
-
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-4">
-              <h2 className="text-base font-semibold text-slate-900">
-                Kontrol Layer
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Tampilkan hanya kategori yang sedang dibutuhkan.
-              </p>
-            </div>
-
-            <LayerControl layers={layers} onChange={setLayers} />
-          </section>
-
-          <Legend categoryCounts={categoryCounts} />
         </div>
 
         <MapView
           markers={filteredMarkers}
           polygons={kuninganPolygons}
           layers={layers}
-          selectedMarker={selectedMarker?.name}
+          onLayersChange={setLayers}
+          categoryCounts={categoryCounts}
+          selectedMarker={(activeMarker ?? selectedMarker)?.name}
+          selectedMarkerData={activeMarker}
+          selectedPolygonData={activePolygon}
           onMarkerClick={(marker) => {
             setSelectedPolygonId(undefined);
             setSelectedMarkerId(marker.id);
+          }}
+          onMarkerHover={(marker) => {
+            setHoveredPolygonId(undefined);
+            setHoveredMarkerId(marker?.id);
           }}
           onPolygonClick={(polygon) => {
             setSelectedMarkerId(undefined);
             setSelectedPolygonId(polygon.id);
           }}
+          onPolygonHover={(polygon) => {
+            setHoveredMarkerId(undefined);
+            setHoveredPolygonId(polygon?.id);
+          }}
         />
       </div>
+
+      <Modal
+        open={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        title="Filter Wilayah"
+        description="Atur kategori, wilayah, RW, dan RT tanpa memenuhi sidebar."
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setFilter((previous) => ({
+                  ...previous,
+                  category: "all",
+                  dusun: "all",
+                  rw: "all",
+                  rt: "all",
+                }))
+              }
+            >
+              Reset Filter
+            </Button>
+            <Button onClick={() => setIsFilterModalOpen(false)}>
+              Terapkan
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Kategori
+            </label>
+            <select
+              value={filter.category}
+              onChange={(event) =>
+                setFilter((previous) => ({
+                  ...previous,
+                  category: event.target.value as MapFilter["category"],
+                }))
+              }
+              className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+            >
+              {categoryOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                Wilayah
+              </label>
+              <select
+                value={filter.dusun}
+                onChange={(event) =>
+                  setFilter((previous) => ({
+                    ...previous,
+                    dusun: event.target.value,
+                  }))
+                }
+                className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              >
+                {areaOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option === "all" ? "Semua wilayah" : option}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">RW</label>
+              <input
+                value={filter.rw === "all" ? "" : filter.rw}
+                onChange={(event) =>
+                  setFilter((previous) => ({
+                    ...previous,
+                    rw: event.target.value || "all",
+                  }))
+                }
+                placeholder="Contoh: 03"
+                className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">RT</label>
+              <input
+                value={filter.rt === "all" ? "" : filter.rt}
+                onChange={(event) =>
+                  setFilter((previous) => ({
+                    ...previous,
+                    rt: event.target.value || "all",
+                  }))
+                }
+                placeholder="Contoh: 01"
+                className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            {activeFilterCount > 0
+              ? `${activeFilterCount} filter aktif akan langsung memengaruhi daftar titik dan marker di peta.`
+              : "Belum ada filter aktif. Kamu bisa mulai dari kategori atau wilayah tertentu."}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

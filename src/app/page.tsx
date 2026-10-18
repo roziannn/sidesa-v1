@@ -124,7 +124,7 @@ export default function LandingPage() {
         <div className="absolute top-40 -right-24 w-[26rem] h-[26rem] rounded-full bg-teal-300/20 blur-3xl animate-float-slow [animation-delay:3s]" />
         <div className="absolute inset-0 -z-10 opacity-[0.07] [background-image:radial-gradient(#fff_1px,transparent_1px)] [background-size:28px_28px]" />
 
-        <div className="max-w-7xl mx-auto px-6 pt-20 pb-40 lg:pt-28 grid lg:grid-cols-2 gap-14 items-center">
+        <div className="max-w-7xl mx-auto px-6 pt-20 pb-44 lg:pt-28 grid lg:grid-cols-2 gap-14 items-center">
           <div>
             <span className="animate-fade-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-emerald-200 backdrop-blur">
               <span className="relative flex w-2 h-2">
@@ -188,16 +188,16 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <svg className="absolute bottom-0 w-full text-slate-50" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden>
+        <svg className="absolute -bottom-px left-0 block w-full h-14 sm:h-20 text-slate-50" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden>
           <path fill="currentColor" d="M0,48 C240,96 480,0 720,32 C960,64 1200,96 1440,40 L1440,80 L0,80 Z" />
         </svg>
       </header>
 
       {/* Layanan */}
-      <section id="layanan" className="max-w-7xl mx-auto px-6 -mt-20 relative z-10 pb-20 scroll-mt-20">
+      <section id="layanan" className="max-w-7xl mx-auto px-6 -mt-14 relative z-10 pb-20 scroll-mt-20">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {SERVICES.map((s, i) => (
-            <Reveal key={s.title} delay={i * 100}>
+            <Reveal key={s.title} delay={i * 100} className="h-full">
               <Link href={s.href} className="group block h-full bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-emerald-900/10 hover:-translate-y-2 transition-all duration-300">
                 <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${s.color} text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
                   <s.icon className="w-6 h-6" />
@@ -220,7 +220,7 @@ export default function LandingPage() {
           <h2 className="mt-2 text-3xl font-bold text-slate-900 tracking-tight">Mengenal Desa Sukamaju</h2>
         </Reveal>
         <div className="grid md:grid-cols-2 gap-8">
-          <Reveal>
+          <Reveal className="h-full">
             <div className="h-full bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-shadow">
               <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                 <span className="p-2 rounded-xl bg-emerald-100 text-emerald-700"><Target className="w-5 h-5" /></span> Visi & Misi
@@ -237,7 +237,7 @@ export default function LandingPage() {
               </ul>
             </div>
           </Reveal>
-          <Reveal delay={150}>
+          <Reveal delay={150} className="h-full">
             <div className="h-full bg-gradient-to-br from-[#07372f] to-[#0b4f43] p-8 rounded-3xl text-white shadow-sm hover:shadow-lg transition-shadow">
               <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
                 <span className="p-2 rounded-xl bg-white/10 text-emerald-300"><BookOpenText className="w-5 h-5" /></span> Sejarah Desa
@@ -263,7 +263,7 @@ export default function LandingPage() {
           </Reveal>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-14">
             {STATS.map((s, i) => (
-              <Reveal key={s.label} delay={i * 100}>
+              <Reveal key={s.label} delay={i * 100} className="h-full">
                 <div className="group h-full p-7 rounded-3xl bg-slate-50 border border-slate-200 hover:bg-emerald-600 hover:border-emerald-600 hover:-translate-y-1 transition-all duration-300">
                   <s.icon className="w-6 h-6 text-emerald-600 group-hover:text-emerald-200 transition-colors" />
                   <p className="mt-4 text-3xl sm:text-4xl font-extrabold text-slate-900 group-hover:text-white transition-colors">
@@ -299,7 +299,7 @@ export default function LandingPage() {
         </Reveal>
         <div className="grid md:grid-cols-3 gap-8">
           {POTENSI.map((p, i) => (
-            <Reveal key={p.title} delay={i * 120}>
+            <Reveal key={p.title} delay={i * 120} className="h-full">
               <div className="group h-full bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-emerald-200 hover:-translate-y-2 transition-all duration-300">
                 <div className={`w-14 h-14 ${p.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300`}>
                   <p.icon className="w-7 h-7" />
@@ -364,7 +364,7 @@ export default function LandingPage() {
         </Reveal>
         <div className="grid md:grid-cols-3 gap-6">
           {BERITA.map((b, i) => (
-            <Reveal key={b.title} delay={i * 120}>
+            <Reveal key={b.title} delay={i * 120} className="h-full">
               <article className="group h-full bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                 <div className="relative h-48 overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}

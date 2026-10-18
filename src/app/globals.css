@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 @import "leaflet/dist/leaflet.css";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* 1. Konfigurasi Variabel CSS Global */
 :root {
@@ -19,13 +20,15 @@
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 /* 3. Aturan Styling Base Element */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* tiptap editor */
@@ -107,6 +110,11 @@ html {
   to { transform: translateX(-50%); }
 }
 
+@keyframes marquee-reverse {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
 @keyframes pulse-ring {
   0% { transform: scale(0.8); opacity: 0.8; }
   100% { transform: scale(2.2); opacity: 0; }
@@ -115,6 +123,7 @@ html {
 .animate-float-slow { animation: float-slow 9s ease-in-out infinite; }
 .animate-fade-up { animation: fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .animate-marquee { animation: marquee 30s linear infinite; }
+.animate-marquee-reverse { animation: marquee-reverse 34s linear infinite; }
 .animate-pulse-ring { animation: pulse-ring 2s ease-out infinite; }
 
 .reveal {
@@ -124,13 +133,126 @@ html {
     transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
   transition-delay: var(--reveal-delay, 0ms);
 }
+.reveal.reveal-left { transform: translateX(-48px); }
+.reveal.reveal-right { transform: translateX(48px); }
 .reveal.is-visible {
   opacity: 1;
   transform: none;
 }
 
+/* Grafik di dalam <Reveal> tumbuh saat terlihat */
+.reveal .bar-fill {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--reveal-delay, 0ms) + 300ms);
+}
+.reveal.is-visible .bar-fill { transform: scaleX(1); }
+.reveal .donut-seg {
+  stroke-dasharray: 0 100;
+  transition: stroke-dasharray 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--reveal-delay, 0ms) + 300ms);
+}
+.reveal.is-visible .donut-seg { stroke-dasharray: var(--dash) 100; }
+
+/* Pola serat kayu halus */
+.bg-woodgrain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='160' viewBox='0 0 240 160' fill='none' stroke='%2316a34a' stroke-width='1' stroke-linecap='round'%3E%3Cpath d='M0 14 C60 6 120 22 180 12 S240 14 240 14' opacity='.55'/%3E%3Cpath d='M0 34 C50 44 110 26 170 36 S240 34 240 34' opacity='.4'/%3E%3Cpath d='M0 56 C70 48 130 66 190 54 S240 56 240 56' opacity='.6'/%3E%3Cpath d='M0 78 C40 86 100 70 160 80 S240 78 240 78' opacity='.35'/%3E%3Cpath d='M0 100 C60 92 120 110 180 98 S240 100 240 100' opacity='.55'/%3E%3Cpath d='M0 122 C50 130 110 114 170 124 S240 122 240 122' opacity='.4'/%3E%3Cpath d='M0 144 C70 136 130 154 190 142 S240 144 240 144' opacity='.6'/%3E%3Cellipse cx='150' cy='67' rx='22' ry='6' opacity='.35'/%3E%3Cellipse cx='150' cy='67' rx='11' ry='3' opacity='.35'/%3E%3C/svg%3E");
+  background-size: 240px 160px;
+  opacity: 0.16;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+}
+
+/* Mode gelap landing page: skala slate dibalik, permukaan putih jadi gelap */
+.dark {
+  color-scheme: dark;
+  --color-slate-50: #0b1410;
+  --color-slate-100: #14201a;
+  --color-slate-200: #1f2e26;
+  --color-slate-300: #2c3e34;
+  --color-slate-400: #7a8f84;
+  --color-slate-500: #9db0a5;
+  --color-slate-600: #b9c7bf;
+  --color-slate-700: #d2ddd7;
+  --color-slate-800: #e5ece8;
+  --color-slate-900: #f3f7f5;
+  --color-slate-950: #fbfdfc;
+}
+.dark .bg-white { background-color: #101a14; }
+.dark .text-green-700 { color: #4ade80; }
+.dark .text-green-800 { color: #86efac; }
+.dark .text-sky-700 { color: #7dd3fc; }
+.dark .hover\:text-green-700:hover { color: #4ade80; }
+.dark circle[stroke="#f1f5f9"] { stroke: #1f2e26; }
+.dark .bg-woodgrain { opacity: 0.22; }
+.dark footer { --tw-gradient-to: #101a14; }
+.dark #beranda { background-image: linear-gradient(to bottom right, #020f08, #04180e, #072a17); }
+.dark #beranda > svg { color: #0b1410; }
+
+/* Penegasan eksplisit mode gelap (tidak bergantung pada variabel tema) */
+.dark .text-slate-50 { color: #0b1410 !important; }
+.dark .bg-slate-50 { background-color: #0b1410 !important; }
+.dark .border-slate-50 { border-color: #0b1410 !important; }
+.dark .hover\:bg-slate-50:hover { background-color: #0b1410 !important; }
+.dark .text-slate-100 { color: #14201a !important; }
+.dark .bg-slate-100 { background-color: #14201a !important; }
+.dark .border-slate-100 { border-color: #14201a !important; }
+.dark .hover\:bg-slate-100:hover { background-color: #14201a !important; }
+.dark .text-slate-200 { color: #1f2e26 !important; }
+.dark .bg-slate-200 { background-color: #1f2e26 !important; }
+.dark .border-slate-200 { border-color: #1f2e26 !important; }
+.dark .hover\:bg-slate-200:hover { background-color: #1f2e26 !important; }
+.dark .text-slate-300 { color: #2c3e34 !important; }
+.dark .bg-slate-300 { background-color: #2c3e34 !important; }
+.dark .border-slate-300 { border-color: #2c3e34 !important; }
+.dark .hover\:bg-slate-300:hover { background-color: #2c3e34 !important; }
+.dark .text-slate-400 { color: #7a8f84 !important; }
+.dark .bg-slate-400 { background-color: #7a8f84 !important; }
+.dark .border-slate-400 { border-color: #7a8f84 !important; }
+.dark .hover\:bg-slate-400:hover { background-color: #7a8f84 !important; }
+.dark .text-slate-500 { color: #9db0a5 !important; }
+.dark .bg-slate-500 { background-color: #9db0a5 !important; }
+.dark .border-slate-500 { border-color: #9db0a5 !important; }
+.dark .hover\:bg-slate-500:hover { background-color: #9db0a5 !important; }
+.dark .text-slate-600 { color: #b9c7bf !important; }
+.dark .bg-slate-600 { background-color: #b9c7bf !important; }
+.dark .border-slate-600 { border-color: #b9c7bf !important; }
+.dark .hover\:bg-slate-600:hover { background-color: #b9c7bf !important; }
+.dark .text-slate-700 { color: #d2ddd7 !important; }
+.dark .bg-slate-700 { background-color: #d2ddd7 !important; }
+.dark .border-slate-700 { border-color: #d2ddd7 !important; }
+.dark .hover\:bg-slate-700:hover { background-color: #d2ddd7 !important; }
+.dark .text-slate-800 { color: #e5ece8 !important; }
+.dark .bg-slate-800 { background-color: #e5ece8 !important; }
+.dark .border-slate-800 { border-color: #e5ece8 !important; }
+.dark .hover\:bg-slate-800:hover { background-color: #e5ece8 !important; }
+.dark .text-slate-900 { color: #f3f7f5 !important; }
+.dark .bg-slate-900 { background-color: #f3f7f5 !important; }
+.dark .border-slate-900 { border-color: #f3f7f5 !important; }
+.dark .hover\:bg-slate-900:hover { background-color: #f3f7f5 !important; }
+.dark .text-slate-950 { color: #fbfdfc !important; }
+.dark .bg-slate-950 { background-color: #fbfdfc !important; }
+.dark .border-slate-950 { border-color: #fbfdfc !important; }
+.dark .hover\:bg-slate-950:hover { background-color: #fbfdfc !important; }
+
+.dark .bg-white { background-color: #101a14 !important; }
+.dark .bg-green-50 { background-color: rgb(34 197 94 / 0.10) !important; }
+.dark .bg-green-100 { background-color: rgb(34 197 94 / 0.16) !important; }
+.dark .hover\:bg-green-50:hover { background-color: rgb(34 197 94 / 0.12) !important; }
+.dark .border-green-100 { border-color: rgb(34 197 94 / 0.20) !important; }
+.dark .text-green-700 { color: #4ade80 !important; }
+.dark .text-green-800 { color: #86efac !important; }
+.dark .text-sky-700 { color: #7dd3fc !important; }
+.dark .from-green-50 { --tw-gradient-from: rgb(34 197 94 / 0.10) !important; }
+.dark .from-sky-50 { --tw-gradient-from: rgb(14 165 233 / 0.10) !important; }
+.dark .bg-sky-50 { background-color: rgb(14 165 233 / 0.10) !important; }
+.dark .border-sky-100 { border-color: rgb(14 165 233 / 0.20) !important; }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .reveal { opacity: 1; transform: none; transition: none; }
-  .animate-float-slow, .animate-fade-up, .animate-marquee, .animate-pulse-ring { animation: none; }
+  .reveal, .reveal.reveal-left, .reveal.reveal-right { opacity: 1; transform: none; transition: none; }
+  .reveal .bar-fill { transform: none; transition: none; }
+  .reveal .donut-seg { stroke-dasharray: var(--dash) 100; transition: none; }
+  .animate-float-slow, .animate-fade-up, .animate-marquee, .animate-marquee-reverse, .animate-pulse-ring { animation: none; }
 }

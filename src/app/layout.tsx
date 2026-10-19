@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SIDESA - Sistem Informasi Desa Digital",
- description: "Sistem Informasi Desa Digital untuk pelayanan masyarakat.",
+  title: "Sidesa Plus - Desa Digital",
+  description: "Sistem Informasi Desa Digital untuk pelayanan masyarakat.",
 };
 
 export default function RootLayout({

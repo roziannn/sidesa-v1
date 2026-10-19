@@ -532,11 +532,11 @@ export default function LandingPage() {
                 </div>
                 <div className="mt-6 grid grid-cols-2 gap-3">
                   <div className="rounded-2xl bg-green-50 px-4 py-3">
-                    <p className="text-xs text-green-700/70">Rasio L : P</p>
+                    <p className="text-xs text-green-700/70 dark:text-slate-300">Rasio L : P</p>
                     <p className="font-bold text-green-800">{((GENDER[0].v / GENDER[1].v) * 100).toFixed(1).replace(".", ",")} : 100</p>
                   </div>
                   <div className="rounded-2xl bg-green-50 px-4 py-3">
-                    <p className="text-xs text-green-700/70">Rata-rata per KK</p>
+                    <p className="text-xs text-green-700/70 dark:text-slate-300">Rata-rata per KK</p>
                     <p className="font-bold text-green-800">{(TOTAL_JIWA / 3763).toFixed(1).replace(".", ",")} jiwa</p>
                   </div>
                 </div>
@@ -571,11 +571,11 @@ export default function LandingPage() {
                 </ul>
                 <div className="mt-6 grid grid-cols-2 gap-3">
                   <div className="rounded-2xl bg-green-50 px-4 py-3">
-                    <p className="text-xs text-green-700/70">Usia produktif</p>
+                    <p className="text-xs text-green-700/70 dark:text-slate-300">Usia produktif</p>
                     <p className="font-bold text-green-800">{Math.round((USIA[1].v / TOTAL_JIWA) * 100)}% penduduk</p>
                   </div>
                   <div className="rounded-2xl bg-green-50 px-4 py-3">
-                    <p className="text-xs text-green-700/70">Rasio ketergantungan</p>
+                    <p className="text-xs text-green-700/70 dark:text-slate-300">Rasio ketergantungan</p>
                     <p className="font-bold text-green-800">{(((USIA[0].v + USIA[2].v) / USIA[1].v) * 100).toFixed(1).replace(".", ",")}%</p>
                   </div>
                 </div>

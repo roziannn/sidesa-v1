@@ -295,7 +295,6 @@ export default function LandingPage() {
               <div className="rounded-3xl bg-white/10 border border-white/15 backdrop-blur-xl p-6 shadow-2xl">
                 <div className="flex items-center justify-between mb-5">
                   <span className="font-semibold">Ringkasan Desa</span>
-                  <Sparkles className="w-4 h-4 text-green-300" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   {[

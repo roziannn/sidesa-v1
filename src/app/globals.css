@@ -256,3 +256,41 @@ html {
   .reveal .donut-seg { stroke-dasharray: var(--dash) 100; transition: none; }
   .animate-float-slow, .animate-fade-up, .animate-marquee, .animate-marquee-reverse, .animate-pulse-ring { animation: none; }
 }
+
+/* ================================================================= */
+/* 6. LOGIN - ilustrasi desa digital                                  */
+/* ================================================================= */
+@keyframes cloud-drift {
+  from { transform: translateX(-12%); }
+  to { transform: translateX(112%); }
+}
+@keyframes tree-sway {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50% { transform: rotate(2.5deg); }
+}
+@keyframes window-glow {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+@keyframes node-pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(3.2); opacity: 0; }
+}
+@keyframes dash-flow {
+  to { stroke-dashoffset: -24; }
+}
+@keyframes sun-rise {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.village-cloud { animation: cloud-drift 60s linear infinite; }
+.village-tree { transform-box: fill-box; transform-origin: bottom center; animation: tree-sway 4s ease-in-out infinite; }
+.village-window { animation: window-glow 3.5s ease-in-out infinite; }
+.village-node-ring { transform-box: fill-box; transform-origin: center; animation: node-pulse 2.6s ease-out infinite; }
+.village-link { stroke-dasharray: 6 6; animation: dash-flow 1.4s linear infinite; }
+.village-sun { animation: sun-rise 1.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .village-cloud, .village-tree, .village-window, .village-node-ring, .village-link, .village-sun { animation: none; }
+}

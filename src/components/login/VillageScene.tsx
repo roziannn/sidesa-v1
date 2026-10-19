@@ -1,77 +1,103 @@
-const WINDOWS = [
-  { x: 128, y: 214, d: "0s" },
-  { x: 232, y: 224, d: "1.1s" },
-  { x: 352, y: 206, d: "2.2s" },
-  { x: 470, y: 222, d: "0.6s" },
+type House = { x: number; base: number; s: number; layer: 0 | 1 | 2 };
+
+const LAYER = [
+  { house: "#0d6b55", hill: "#0a5844", window: "#a7f3d0", opacity: 0.55 },
+  { house: "#07443a", hill: "#073f33", window: "#fde68a", opacity: 0.8 },
+  { house: "#04201b", hill: "#052a22", window: "#fde68a", opacity: 1 },
+] as const;
+
+const HOUSES: House[] = [
+  // belakang
+  ...[40, 135, 225, 315, 405, 495, 575].map((x, i) => ({ x, base: 214 - (i % 2) * 4, s: 0.55, layer: 0 as const })),
+  // tengah
+  ...[85, 180, 275, 370, 460, 545].map((x, i) => ({ x, base: 240 - (i % 2) * 3, s: 0.8, layer: 1 as const })),
+  // depan
+  ...[125, 265, 400, 525].map((x, i) => ({ x, base: 266 - (i % 2) * 3, s: 1.1, layer: 2 as const })),
 ];
 
-const NODES = [
-  { x: 150, y: 120, d: "0s" },
-  { x: 290, y: 78, d: "0.8s" },
-  { x: 410, y: 108, d: "1.6s" },
-];
+// titik koneksi tiap rumah (di atas atap)
+const NODES = HOUSES.map((h) => ({ x: h.x, y: h.base - 50 * h.s - 10 }));
+
+// hubungkan tiap rumah ke 2 tetangga terdekat, tanpa duplikat
+const LINKS = (() => {
+  const seen = new Set<string>();
+  const out: [number, number][] = [];
+  NODES.forEach((a, i) => {
+    NODES.map((b, j) => ({ j, d: Math.hypot(a.x - b.x, (a.y - b.y) * 1.6) }))
+      .filter((n) => n.j !== i)
+      .sort((p, q) => p.d - q.d)
+      .slice(0, 2)
+      .forEach(({ j }) => {
+        const key = i < j ? `${i}-${j}` : `${j}-${i}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          out.push([i, j]);
+        }
+      });
+  });
+  return out;
+})();
+
+function HouseShape({ h, i }: { h: House; i: number }) {
+  const { x, base, s, layer } = h;
+  const c = LAYER[layer];
+  const w = 40 * s, wall = 30 * s, roof = 20 * s;
+  return (
+    <g opacity={c.opacity}>
+      <path d={`M${x - w / 2} ${base} V${base - wall} L${x} ${base - wall - roof} L${x + w / 2} ${base - wall} V${base} Z`} fill={c.house} />
+      <rect
+        className={layer > 0 ? "village-window" : undefined}
+        x={x - 4 * s} y={base - wall + 6 * s} width={8 * s} height={8 * s} rx={1.2 * s}
+        fill={c.window} opacity={layer === 0 ? 0.5 : undefined}
+        style={{ animationDelay: `${(i % 5) * 0.7}s` }}
+      />
+    </g>
+  );
+}
 
 export default function VillageScene() {
   return (
-    <svg viewBox="0 0 600 300" preserveAspectRatio="xMidYMax slice" className="absolute inset-x-0 bottom-0 w-full h-[46%] pointer-events-none" aria-hidden>
+    <svg viewBox="0 0 600 300" preserveAspectRatio="xMidYMax slice" className="absolute inset-x-0 bottom-0 w-full h-[50%] pointer-events-none" aria-hidden>
       {/* Matahari */}
       <g className="village-sun">
-        <circle cx="500" cy="90" r="46" fill="#bef264" opacity="0.15" />
-        <circle cx="500" cy="90" r="28" fill="#d9f99d" opacity="0.5" />
+        <circle cx="520" cy="70" r="46" fill="#bef264" opacity="0.15" />
+        <circle cx="520" cy="70" r="28" fill="#d9f99d" opacity="0.5" />
       </g>
 
-      {/* Awan */}
-      <g className="village-cloud" opacity="0.18" fill="#fff">
-        <ellipse cx="60" cy="60" rx="34" ry="10" />
-        <ellipse cx="82" cy="52" rx="22" ry="9" />
-      </g>
-      <g className="village-cloud [animation-delay:-28s] [animation-duration:80s]" opacity="0.12" fill="#fff">
-        <ellipse cx="60" cy="120" rx="28" ry="8" />
-        <ellipse cx="78" cy="113" rx="18" ry="7" />
-      </g>
+      {/* Bukit & rumah, dari belakang ke depan */}
+      <path d="M0 200 Q90 168 190 196 T380 190 T600 186 V300 H0 Z" fill={LAYER[0].hill} opacity="0.7" />
+      {HOUSES.map((h, i) => h.layer === 0 && <HouseShape key={i} h={h} i={i} />)}
 
-      {/* Jaringan digital */}
-      <g stroke="#6ee7b7" strokeWidth="1.2" fill="none" opacity="0.5">
-        <path className="village-link" d="M150 120 L290 78 L410 108" />
-        <path className="village-link" d="M150 120 L132 205" />
-        <path className="village-link" d="M290 78 L238 215" />
-        <path className="village-link" d="M410 108 L358 198" />
-      </g>
-      {NODES.map((n) => (
-        <g key={n.x}>
-          <circle className="village-node-ring" cx={n.x} cy={n.y} r="4" fill="#6ee7b7" style={{ animationDelay: n.d }} />
-          <circle cx={n.x} cy={n.y} r="4" fill="#a7f3d0" />
-        </g>
-      ))}
+      <path d="M0 232 Q110 204 230 228 T430 222 T600 218 V300 H0 Z" fill={LAYER[1].hill} />
+      {HOUSES.map((h, i) => h.layer === 1 && <HouseShape key={i} h={h} i={i} />)}
 
-      {/* Bukit */}
-      <path d="M0 230 Q120 170 260 220 T600 200 V300 H0 Z" fill="#0a4a3c" opacity="0.7" />
-      <path d="M0 260 Q150 215 300 255 T600 240 V300 H0 Z" fill="#06362c" />
-
-      {/* Rumah */}
-      <g fill="#04201b">
-        <path d="M110 250 V205 L138 185 L166 205 V250 Z" />
-        <path d="M215 255 V215 L240 198 L265 215 V255 Z" />
-        <path d="M335 250 V198 L365 176 L395 198 V250 Z" />
-        <path d="M450 258 V214 L476 196 L502 214 V258 Z" />
-      </g>
-      <g fill="#fde68a">
-        {WINDOWS.map((w) => (
-          <rect key={w.x} className="village-window" x={w.x} y={w.y} width="9" height="9" rx="1.5" style={{ animationDelay: w.d }} />
-        ))}
-      </g>
+      <path d="M0 262 Q130 240 270 258 T600 250 V300 H0 Z" fill={LAYER[2].hill} />
+      {HOUSES.map((h, i) => h.layer === 2 && <HouseShape key={i} h={h} i={i} />)}
 
       {/* Pohon */}
-      {[70, 300, 548].map((x, i) => (
-        <g key={x} className="village-tree" style={{ animationDelay: `${i * 0.7}s` }}>
-          <rect x={x - 2} y="240" width="4" height="22" fill="#04201b" />
-          <circle cx={x} cy="232" r="16" fill="#0b6b52" />
-          <circle cx={x - 8} cy="240" r="11" fill="#0b6b52" />
-          <circle cx={x + 9} cy="240" r="11" fill="#0b6b52" />
+      {[28, 198, 335, 470, 580].map((x, i) => (
+        <g key={x} className="village-tree" style={{ animationDelay: `${i * 0.6}s` }}>
+          <rect x={x - 1.5} y="266" width="3" height="14" fill="#04201b" />
+          <circle cx={x} cy="261" r="10" fill="#0b6b52" />
+          <circle cx={x - 6} cy="267" r="7" fill="#0b6b52" />
+          <circle cx={x + 6} cy="267" r="7" fill="#0b6b52" />
         </g>
       ))}
 
-      <path d="M0 280 Q200 262 400 278 T600 270 V300 H0 Z" fill="#031812" />
+      {/* Jaringan antar rumah */}
+      <g stroke="#6ee7b7" strokeWidth="1" fill="none" opacity="0.45">
+        {LINKS.map(([a, b]) => (
+          <line key={`${a}-${b}`} className="village-link" x1={NODES[a].x} y1={NODES[a].y} x2={NODES[b].x} y2={NODES[b].y} />
+        ))}
+      </g>
+      {NODES.map((n, i) => (
+        <g key={i}>
+          {i % 3 === 0 && <circle className="village-node-ring" cx={n.x} cy={n.y} r="3" fill="#6ee7b7" style={{ animationDelay: `${(i % 7) * 0.4}s` }} />}
+          <circle cx={n.x} cy={n.y} r={HOUSES[i].layer === 0 ? 2.2 : HOUSES[i].layer === 1 ? 2.8 : 3.4} fill="#a7f3d0" />
+        </g>
+      ))}
+
+      <path d="M0 286 Q200 272 400 284 T600 278 V300 H0 Z" fill="#031812" />
     </svg>
   );
 }

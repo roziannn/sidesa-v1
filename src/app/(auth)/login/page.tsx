@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Building2, FileCheck, Megaphone, ShieldCheck, Users } from "lucide-react";
 import LoginForm from "@/components/login/LoginForm";
+import VillageScene from "@/components/login/VillageScene";
 
 const FITUR = [
   { icon: FileCheck, text: "Kelola surat & arsip desa" },
@@ -16,6 +17,8 @@ export default function LoginPage() {
         <div className="absolute -top-28 -left-20 w-96 h-96 rounded-full bg-emerald-400/20 blur-3xl animate-float-slow" />
         <div className="absolute bottom-0 -right-24 w-96 h-96 rounded-full bg-teal-300/20 blur-3xl animate-float-slow [animation-delay:3s]" />
         <div className="absolute inset-0 opacity-[0.07] [background-image:radial-gradient(#fff_1px,transparent_1px)] [background-size:28px_28px]" />
+
+        <VillageScene />
 
         <Link href="/" className="relative flex items-center gap-3 w-fit">
           <span className="p-2 rounded-xl bg-white/10 border border-white/15"><Building2 className="w-5 h-5" /></span>
